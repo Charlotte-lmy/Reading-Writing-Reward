@@ -253,7 +253,8 @@ if (totalAllEl) {
         <div class="task-row">
           <div>
             <label for="book-input">书名 / 任务名</label>
-            <input type="text" id="book-input" placeholder="例如：Naval 英文 / 论文资料 / 小说《XXX》" />
+           <div class="hint">例如：英语阅读 / 专业学习 / 休闲阅读（可留空）</div>
+<input type="text" id="label-input" placeholder="给这次阅读起个名字（可不填）" />
           </div>
           <div>
             <label for="book-pages-input">目标页数</label>
@@ -261,9 +262,10 @@ if (totalAllEl) {
           </div>
           <div>
             <label for="book-label-input">标签（可选）</label>
-            <input type="text" id="book-label-input" placeholder="Naval 英文 / 论文 / 小说阅读…" />
-          </div>
+           <div class="hint">例如：英语阅读 / 专业学习 / 休闲阅读（可留空）</div>
+<input type="text" id="label-input" placeholder="给这次阅读起个名字（可不填）" />
         </div>
+        <div>
         <div class="task-actions">
           <button class="mini-btn primary" id="add-book-btn">添加这本书</button>
           <button class="mini-btn" id="clear-today-books-btn">清空今日书单</button>
@@ -277,8 +279,8 @@ if (totalAllEl) {
         <label id="total-label" for="total-input">今天打算写多少字？</label>
         <input type="number" id="total-input" min="1" placeholder="例如：800" />
         <label for="label-input">这个任务属于哪个项目？</label>
-       <div class="hint">例如：英语阅读 / 专业学习 / 休闲阅读（可留空）</div>
-<input type="text" id="label-input" placeholder="给这次阅读起个名字（可不填）" />
+       <div class="hint">例如：论文写作/英文日常写作(可留空)</div>
+<input type="text" id="label-input" placeholder="给这次写作起个名字（可不填）" />
       </div>
 
       <button class="btn" id="start-btn">开始今天的任务</button>
