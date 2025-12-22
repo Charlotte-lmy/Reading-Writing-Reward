@@ -131,21 +131,14 @@ if (totalAllEl) {
     .chart-container { margin-top: 4px; }
     .chart-note { font-size: 11px; color: #777; margin-bottom: 4px; }
     .chart{
-  height: 220px;     /* ✅ 必须有明确高度 */
-  display: flex;
-  align-items: flex-end;
-  overflow-x: auto;
-  gap: 10px;
+  height: 220px;       /* 更高 */
+  overflow-x: auto;    /* 可横向滑动 */
+  gap: 10px;           /* 柱子间距 */
   padding: 8px 6px 10px;
 }
 
 .chart-bar-wrapper{
-  flex: 0 0 32px;           /* 柱子宽 */
-  height: 100%;             /* ✅ 关键：让柱子的百分比高度有参照 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end; /* ✅ 关键：从底部往上长 */
+  flex: 0 0 32px;      /* 每根柱子的宽度 */
 }
 
 .chart-bar{
@@ -241,7 +234,8 @@ if (totalAllEl) {
 <body>
   <div class="card">
     <h1>🦊 阅读 & 写作小烟花</h1>
-   <div class="subtitle">Small steps, real progress.</div>
+    <div class="subtitle">It hurts but it builds up.</div>
+
     <div class="mode-switch">
       <button class="mode-btn active" data-mode="read">📖 阅读模式</button>
       <button class="mode-btn" data-mode="write">✍️ 写作模式</button>
@@ -253,8 +247,7 @@ if (totalAllEl) {
         <div class="task-row">
           <div>
             <label for="book-input">书名 / 任务名</label>
-           <div class="hint">例如：英语阅读 / 专业学习 / 休闲阅读（可留空）</div>
-<input type="text" id="label-input" placeholder="给这次阅读起个名字（可不填）" />
+            <input type="text" id="book-input" placeholder="例如：Naval 英文 / 论文资料 / 小说《XXX》" />
           </div>
           <div>
             <label for="book-pages-input">目标页数</label>
@@ -262,10 +255,9 @@ if (totalAllEl) {
           </div>
           <div>
             <label for="book-label-input">标签（可选）</label>
-           <div class="hint">例如：英语阅读 / 专业学习 / 休闲阅读（可留空）</div>
-<input type="text" id="label-input" placeholder="给这次阅读起个名字（可不填）" />
+            <input type="text" id="book-label-input" placeholder="Naval 英文 / 论文 / 小说阅读…" />
+          </div>
         </div>
-        <div>
         <div class="task-actions">
           <button class="mini-btn primary" id="add-book-btn">添加这本书</button>
           <button class="mini-btn" id="clear-today-books-btn">清空今日书单</button>
@@ -279,8 +271,8 @@ if (totalAllEl) {
         <label id="total-label" for="total-input">今天打算写多少字？</label>
         <input type="number" id="total-input" min="1" placeholder="例如：800" />
         <label for="label-input">这个任务属于哪个项目？</label>
-       <div class="hint">例如：论文写作/英文日常写作(可留空)</div>
-<input type="text" id="label-input" placeholder="给这次写作起个名字（可不填）" />
+        <div class="hint">例如：论文 / 课程作业 / 英文写作（可留空）</div>
+        <input type="text" id="label-input" placeholder="可留空，不填也可以" />
       </div>
 
       <button class="btn" id="start-btn">开始今天的任务</button>
