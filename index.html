@@ -2,307 +2,181 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>阅读 & 写作小烟花 · 多本书并行版（目标可加 + 图表修复 + 迁移不丢档）</title>
+  <title>阅读 & 写作小烟花 · 正反馈工具（全新版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "PingFang SC", sans-serif;
-      display: flex;const totalAllPages = history.reduce((sum, item) => sum + Number(item.finished || 0), 0);
+    body{
+      margin:0;min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI","PingFang SC",sans-serif;
+      display:flex;align-items:center;justify-content:center;
+      background: radial-gradient(circle at top,#fce4ec,#e3f2fd);
+    }
+    .card{
+      background:#ffffffcc;backdrop-filter:blur(8px);
+      padding:20px 22px;border-radius:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+      max-width:620px;width:94%;box-sizing:border-box;
+    }
+    h1{font-size:20px;margin:0 0 8px;text-align:center;}
+    .subtitle{font-size:13px;color:#666;text-align:center;margin-bottom:10px;}
+    .mode-switch{
+      display:flex;gap:8px;background:#f3e5f5aa;padding:4px;border-radius:999px;
+      margin:8px auto 14px;max-width:280px;
+    }
+    .mode-btn{
+      flex:1;border-radius:999px;border:none;padding:6px 0;font-size:13px;cursor:pointer;
+      background:transparent;color:#555;transition:background .2s,color .2s,transform .1s;
+    }
+    .mode-btn.active{
+      background:linear-gradient(135deg,#ff80ab,#7c4dff);color:#fff;font-weight:600;transform:translateY(-1px);
+      box-shadow:0 4px 10px rgba(124,77,255,.35);
+    }
+    label{font-size:14px;display:block;margin-bottom:4px;}
+    input[type="number"],input[type="text"],input[type="date"],select{
+      width:100%;padding:7px 9px;border-radius:8px;border:1px solid #ccc;
+      font-size:13px;box-sizing:border-box;margin-bottom:6px;background:#fff;
+    }
+    .hint{font-size:11px;color:#888;margin-bottom:4px;}
+    .btn{
+      margin-top:6px;width:100%;padding:10px 0;font-size:15px;border-radius:999px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,#ff80ab,#7c4dff);color:#fff;font-weight:600;
+      transition:transform .1s,box-shadow .1s,opacity .2s;box-shadow:0 6px 15px rgba(124,77,255,.35);
+    }
+    .btn:active{transform:translateY(1px) scale(.99);box-shadow:0 3px 8px rgba(124,77,255,.3);}
+    .btn-secondary{
+      margin-top:8px;width:100%;padding:9px 0;font-size:13px;border-radius:999px;border:1px solid #d7d7d7;
+      cursor:pointer;background:rgba(255,255,255,.85);color:#444;
+    }
+    .btn-row{display:flex;gap:8px;margin-top:6px;}
+    .btn-small{
+      flex:1;padding:8px 0;font-size:12px;border-radius:999px;border:1px solid #d7d7d7;
+      cursor:pointer;background:rgba(255,255,255,.9);color:#333;
+    }
+    .btn-small.primary{
+      border:none;background:linear-gradient(135deg,#ff80ab,#7c4dff);color:#fff;font-weight:600;
+      box-shadow:0 6px 15px rgba(124,77,255,.25);
+    }
+    .btn-small.active{
+      border:none;color:#fff;font-weight:600;
+      background:linear-gradient(135deg,#ff80ab,#7c4dff);
+      box-shadow:0 6px 15px rgba(124,77,255,.22);
+    }
+    .hidden{display:none;}
 
-// ✅ 累计天数：按“日期汇总后，当天总页数 > 0 才算一天”
-const daysWithReading = new Set();
-history.forEach(item => {
-  if (Number(item.finished || 0) > 0 && item.date) daysWithReading.add(item.date);
-});
-const totalDays = daysWithReading.size;
-const avgPerDay = totalDays > 0 ? (totalAllPages / totalDays) : 0;
+    .progress-container{margin-top:14px;}
+    .progress-text{font-size:14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;}
+    .progress-main{font-weight:600;}
+    .progress-percent{font-size:12px;color:#666;}
+    .progress-bar{width:100%;height:10px;border-radius:999px;background:#eee;overflow:hidden;}
+    .progress-bar-inner{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#ff80ab,#7c4dff);transition:width .25s ease;}
+    .status-text{margin-top:6px;font-size:13px;color:#555;text-align:center;}
+    .current-label{margin-top:4px;font-size:12px;color:#777;text-align:center;}
+    .current-label span{font-weight:600;color:#5e35b1;}
 
-if (totalAllEl) {
-  totalAllEl.textContent =
-    `累计阅读：${totalAllPages} 页 ｜ 累计天数：${totalDays} 天 ｜ 平均每天：${avgPerDay.toFixed(1)} 页/天`;
-}
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, #fce4ec, #e3f2fd);
+    .celebrate-area{position:relative;margin-top:14px;height:70px;overflow:visible;}
+    .celebrate-item{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      font-size:30px;pointer-events:none;animation:pop-up 900ms ease-out forwards;
     }
-    .card {
-      background: #ffffffcc;
-      backdrop-filter: blur(8px);
-      padding: 20px 22px;
-      border-radius: 18px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-      max-width: 560px;
-      width: 94%;
-      box-sizing: border-box;
+    @keyframes pop-up{
+      0%{transform:translate(-50%,-30%) scale(.4);opacity:0;}
+      40%{transform:translate(-50%,-60%) scale(1.1);opacity:1;}
+      100%{transform:translate(-50%,-110%) scale(.7);opacity:0;}
     }
-    h1 { font-size: 20px; margin: 0 0 8px; text-align: center; }
-    .subtitle { font-size: 13px; color: #666; text-align: center; margin-bottom: 10px; }
+    .message{margin-top:4px;font-size:13px;text-align:center;color:#444;min-height:20px;}
+    .message-strong{font-weight:600;color:#ff4081;}
 
-    .mode-switch {
-      display: flex; gap: 8px; background: #f3e5f5aa; padding: 4px; border-radius: 999px;
-      margin: 8px auto 14px; max-width: 280px;
-    }
-    .mode-btn {
-      flex: 1; border-radius: 999px; border: none; padding: 6px 0; font-size: 13px;
-      cursor: pointer; background: transparent; color: #555;
-      transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease;
-    }
-    .mode-btn.active {
-      background: linear-gradient(135deg, #ff80ab, #7c4dff);
-      color: #fff; font-weight: 600; transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(124, 77, 255, 0.35);
-    }
+    .history-section{margin-top:14px;border-top:1px dashed #ddd;padding-top:8px;}
+    .history-title{font-size:12px;color:#777;margin-bottom:4px;}
+    .week-summary{font-size:11px;color:#555;margin-bottom:4px;}
+    .history-list{font-size:11px;color:#555;max-height:110px;overflow-y:auto;}
+    .history-item{display:flex;justify-content:space-between;margin-bottom:2px;}
+    .history-date{flex:0 0 auto;margin-right:6px;}
+    .history-detail{flex:1;text-align:right;}
 
-    label { font-size: 14px; display: block; margin-bottom: 4px; }
-    input[type="number"], input[type="text"], input[type="date"] {
-      width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #ccc;
-      font-size: 13px; box-sizing: border-box; margin-bottom: 6px;
+    .all-reading-section{margin-top:14px;border-top:1px dashed #ddd;padding-top:8px;}
+    .all-reading-title{font-size:12px;color:#777;margin-bottom:4px;}
+    .all-reading-table{
+      max-height:210px;overflow-y:auto;border-radius:8px;background:#fafafa;padding:6px;box-sizing:border-box;margin-bottom:8px;
     }
-    .hint { font-size: 11px; color: #888; margin-bottom: 4px; }
+    table.reading-table{width:100%;border-collapse:collapse;font-size:11px;color:#555;}
+    table.reading-table th, table.reading-table td{
+      padding:2px 4px;text-align:left;border-bottom:1px solid #eee;white-space:nowrap;vertical-align:top;
+    }
+    table.reading-table th{font-weight:600;color:#666;}
+    .actions a{cursor:pointer;text-decoration:underline;color:#5e35b1;margin-right:8px;}
 
-    .btn {
-      margin-top: 6px; width: 100%; padding: 10px 0; font-size: 15px; border-radius: 999px;
-      border: none; cursor: pointer; background: linear-gradient(135deg, #ff80ab, #7c4dff);
-      color: white; font-weight: 600; transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.2s ease;
-      box-shadow: 0 6px 15px rgba(124, 77, 255, 0.35);
-    }
-    .btn:active { transform: translateY(1px) scale(0.99); box-shadow: 0 3px 8px rgba(124, 77, 255, 0.3); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-    .hidden { display: none; }
-
-    .btn-secondary {
-      flex: 1; padding: 6px 0; font-size: 11px; border-radius: 999px; border: 1px solid #ddd;
-      background: #fafafa; color: #666; cursor: pointer; transition: background 0.1s ease, transform 0.1s ease;
-    }
-    .btn-secondary:active { background: #f0f0f0; transform: translateY(1px); }
-    .btn-secondary.danger { border-color: #ff8a80; color: #d32f2f; background: #fff5f5; }
-    .btn-secondary.danger:active { background: #ffe5e5; }
-    .secondary-group { display: flex; gap: 6px; margin-top: 8px; }
-
-    .progress-container { margin-top: 14px; }
-    .progress-text { font-size: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: baseline; }
-    .progress-main { font-weight: 600; }
-    .progress-percent { font-size: 12px; color: #666; }
-    .progress-bar { width: 100%; height: 10px; border-radius: 999px; background: #eee; overflow: hidden; }
-    .progress-bar-inner {
-      height: 100%; width: 0%; border-radius: 999px;
-      background: linear-gradient(90deg, #ff80ab, #7c4dff);
-      transition: width 0.25s ease;
-    }
-    .status-text { margin-top: 6px; font-size: 13px; color: #555; text-align: center; }
-    .current-label { margin-top: 4px; font-size: 12px; color: #777; text-align: center; }
-    .current-label span { font-weight: 600; color: #5e35b1; }
-
-    .celebrate-area { position: relative; margin-top: 14px; height: 70px; overflow: visible; }
-    .celebrate-item {
-      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-      font-size: 30px; pointer-events: none; animation: pop-up 900ms ease-out forwards;
-    }
-    @keyframes pop-up {
-      0% { transform: translate(-50%, -30%) scale(0.4); opacity: 0; }
-      40% { transform: translate(-50%, -60%) scale(1.1); opacity: 1; }
-      100% { transform: translate(-50%, -110%) scale(0.7); opacity: 0; }
-    }
-    .message { margin-top: 4px; font-size: 13px; text-align: center; color: #444; min-height: 20px; }
-    .message-strong { font-weight: 600; color: #ff4081; }
-
-    .history-section { margin-top: 14px; border-top: 1px dashed #ddd; padding-top: 8px; }
-    .history-title { font-size: 12px; color: #777; margin-bottom: 4px; }
-    .week-summary { font-size: 11px; color: #555; margin-bottom: 4px; }
-    .history-list { font-size: 11px; color: #555; max-height: 90px; overflow-y: auto; }
-    .history-item { display: flex; justify-content: space-between; margin-bottom: 2px; }
-    .history-date { flex: 0 0 auto; margin-right: 6px; }
-    .history-detail { flex: 1; text-align: right; }
-
-    .all-reading-section { margin-top: 14px; border-top: 1px dashed #ddd; padding-top: 8px; }
-    .all-reading-title { font-size: 12px; color: #777; margin-bottom: 4px; }
-    .all-reading-table {
-      max-height: 140px; overflow-y: auto; border-radius: 8px; background: #fafafa;
-      padding: 6px; box-sizing: border-box; margin-bottom: 8px;
-    }
-    table.reading-table { width: 100%; border-collapse: collapse; font-size: 11px; color: #555; }
-    table.reading-table th, table.reading-table td {
-      padding: 2px 4px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap;
-    }
-    table.reading-table th { font-weight: 600; color: #666; }
-
-    .chart-container { margin-top: 4px; }
-    .chart-note { font-size: 11px; color: #777; margin-bottom: 4px; }
+    .chart-note{font-size:11px;color:#777;margin-bottom:4px;}
     .chart{
-  height: 220px;       /* 更高 */
-  overflow-x: auto;    /* 可横向滑动 */
-  gap: 10px;           /* 柱子间距 */
-  padding: 8px 6px 10px;
-}
+      height:220px;display:flex;align-items:flex-end;overflow-x:auto;gap:10px;padding:8px 6px 10px;box-sizing:border-box;
+      background:#fafafa;border-radius:8px;
+    }
+    .chart-bar-wrapper{
+      flex:0 0 32px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:16px;
+    }
+    .chart-bar{
+      width:100%;max-width:32px;min-height:6px;border-radius:999px 999px 0 0;
+      background:linear-gradient(135deg,#ff80ab,#7c4dff);transition:height .2s ease;
+    }
+    .chart-bar.streak{outline:2px solid rgba(0,0,0,.35);box-shadow:0 2px 8px rgba(0,0,0,.12);}
+    .chart-bar-label{margin-top:2px;font-size:9px;color:#777;text-align:center;transform:scale(.9);white-space:pre;}
 
-.chart-bar-wrapper{
-  flex: 0 0 32px;      /* 每根柱子的宽度 */
-}
-
-.chart-bar{
-  max-width: 32px;     /* 柱子更粗 */
-  min-height: 6px;     /* 0页也可见 */
-}
-    .chart-bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 16px; }
-    .chart-bar {
-      width: 100%; max-width: 20px; border-radius: 999px 999px 0 0;
-      background: linear-gradient(135deg, #ff80ab, #7c4dff);
-      transition: height 0.2s ease;
-      min-height: 2px; /* ✅ 关键：即使是0页也不会完全“空白看不见” */
-    }
-/* streak 高亮：不改颜色，只加粗 + 描边 + 轻微阴影 */
-.chart-bar.streak {
-  outline: 2px solid rgba(0,0,0,0.35);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
-
-.chart-bar-wrapper.streak {
-  transform: scaleY(1.02);
-}
-    .chart-bar-label { margin-top: 2px; font-size: 9px; color: #777; text-align: center; transform: scale(0.9); white-space: pre; }
-
-    .manual-section { margin-top: 10px; border-top: 1px dashed #eee; padding-top: 6px; }
-    .manual-title { font-size: 11px; color: #777; margin-bottom: 4px; }
-    .manual-row { display: flex; gap: 6px; margin-bottom: 6px; }
-    .manual-row .col { flex: 1; }
-    .manual-btn {
-      width: 100%; padding: 6px 0; font-size: 11px; border-radius: 999px;
-      border: 1px solid #ddd; background: #f5f5ff; color: #5e35b1; cursor: pointer;
-      transition: background 0.1s ease, transform 0.1s ease;
-    }
-    .manual-btn:active { background: #e8e0ff; transform: translateY(1px); }
-
-    .multi-title { font-size: 12px; color: #777; margin-bottom: 6px; }
-    .multi-box { background: #fafafa; border-radius: 12px; padding: 10px; border: 1px solid #eee; margin-bottom: 10px; }
-    .task-row { display: grid; grid-template-columns: 1.3fr 0.7fr 1fr; gap: 6px; }
-    .task-actions { display: flex; gap: 6px; margin-top: 6px; }
-    .mini-btn {
-      flex: 1;
-      padding: 7px 0;
-      font-size: 12px;
-      border-radius: 999px;
-      border: 1px solid #ddd;
-      background: #fff;
-      color: #555;
-      cursor: pointer;
-    }
-    .mini-btn.primary {
-      border: none;
-      background: linear-gradient(135deg, #ff80ab, #7c4dff);
-      color: #fff;
-    }
-    .mini-btn:active { transform: translateY(1px); }
-    .task-list { margin-top: 8px; display: grid; gap: 6px; }
-    .task-item {
-      background: #fff;
-      border-radius: 12px;
-      border: 1px solid #eee;
-      padding: 10px;
-    }
-    .task-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: baseline;
-      margin-bottom: 6px;
-    }
-    .task-name { font-weight: 700; font-size: 13px; color: #333; }
-    .task-meta { font-size: 11px; color: #777; }
-    .task-progressline { display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-bottom: 6px; }
-    .task-bar { height: 8px; border-radius: 999px; background: #eee; overflow: hidden; }
-    .task-bar-inner {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #ff80ab, #7c4dff);
-    }
-    .task-ops { display: flex; gap: 6px; margin-top: 8px; }
-    .task-ops button { flex: 1; }
-
-    .footer-tip { margin-top: 8px; font-size: 11px; text-align: center; color: #999; }
-
-    @media (max-width: 480px) {
-      .card { padding: 16px 16px; border-radius: 16px; }
-      h1 { font-size: 18px; }
-      .subtitle { font-size: 12px; }
-      .task-row { grid-template-columns: 1fr; }
-    }
+    .footer-tip{margin-top:8px;font-size:11px;text-align:center;color:#999;}
+    @media(max-width:480px){.card{padding:16px 16px;border-radius:16px;}h1{font-size:18px;}.subtitle{font-size:12px;}}
   </style>
 </head>
+
 <body>
   <div class="card">
     <h1>🦊 阅读 & 写作小烟花</h1>
-    <div class="subtitle">It hurts but it builds up.</div>
+    <div class="subtitle">Small steps, real progress.</div>
 
     <div class="mode-switch">
       <button class="mode-btn active" data-mode="read">📖 阅读模式</button>
       <button class="mode-btn" data-mode="write">✍️ 写作模式</button>
     </div>
 
+    <!-- 设定目标 -->
     <div id="setup-section">
-      <div id="multi-setup" class="multi-box">
-        <div class="multi-title">📚 今日多本书任务（可同时读两本/多本）</div>
-        <div class="task-row">
-          <div>
-            <label for="book-input">书名 / 任务名</label>
-            <input type="text" id="book-input" placeholder="例如：Naval 英文 / 论文资料 / 小说《XXX》" />
-          </div>
-          <div>
-            <label for="book-pages-input">目标页数</label>
-            <input type="number" id="book-pages-input" min="1" placeholder="30" />
-          </div>
-          <div>
-            <label for="book-label-input">标签（可选）</label>
-            <input type="text" id="book-label-input" placeholder="Naval 英文 / 论文 / 小说阅读…" />
-          </div>
-        </div>
-        <div class="task-actions">
-          <button class="mini-btn primary" id="add-book-btn">添加这本书</button>
-          <button class="mini-btn" id="clear-today-books-btn">清空今日书单</button>
-        </div>
+      <label id="total-label" for="total-input">今天打算读多少页？</label>
+      <input type="number" id="total-input" min="1" placeholder="例如：30" />
 
-        <div class="hint">开始后也可以继续添加新书；同一本书如果读两段，可用“目标+页”。</div>
-        <div class="task-list" id="today-book-list-setup"></div>
+      <div id="read-title-block">
+        <label for="book-input">书名（可选）</label>
+        <input type="text" id="book-input" placeholder="（可不填）" list="book-suggestions" />
+        <datalist id="book-suggestions"></datalist>
       </div>
 
-      <div id="write-setup" class="hidden">
-        <label id="total-label" for="total-input">今天打算写多少字？</label>
-        <input type="number" id="total-input" min="1" placeholder="例如：800" />
+      <div id="write-label-block" class="hidden">
         <label for="label-input">这个任务属于哪个项目？</label>
-        <div class="hint">例如：论文 / 课程作业 / 英文写作（可留空）</div>
-        <input type="text" id="label-input" placeholder="可留空，不填也可以" />
+        <div class="hint">例如：论文 / 英文写作 / 日记（可留空）</div>
+        <input type="text" id="label-input" placeholder="项目名称（可选）" />
       </div>
 
-      <button class="btn" id="start-btn">开始今天的任务</button>
+      <button class="btn" id="start-btn">添加一个任务并开始</button>
+      <div class="hint" style="margin-top:8px;">同一天可以添加多个任务，不会互相覆盖。</div>
     </div>
 
+    <!-- 主界面 -->
     <div id="main-section" class="hidden">
-      <div id="single-progress-area" class="progress-container hidden">
+      <div style="margin-top:6px;">
+        <label style="font-size:12px;color:#666;">当前书 / 当前任务</label>
+        <select id="task-select"></select>
+        <div class="hint">切换当前任务：用下拉框选择</div>
+      </div>
+
+      <div class="progress-container">
         <div class="progress-text">
           <div class="progress-main" id="progress-main-text">已完成 0 / 0</div>
           <div class="progress-percent" id="progress-percent-text">0%</div>
         </div>
-        <div class="progress-bar">
-          <div class="progress-bar-inner" id="progress-bar-inner"></div>
-        </div>
+        <div class="progress-bar"><div class="progress-bar-inner" id="progress-bar-inner"></div></div>
         <div class="status-text" id="status-text">慢慢来，每一点都算数 ✨</div>
         <div class="current-label" id="current-label"></div>
-        <button class="btn" id="done-btn">再写一点 ✅</button>
       </div>
 
-      <div id="multi-progress-area" class="hidden">
-        <div class="history-title">📌 今日书单（每本书独立计数 + 可追加目标）</div>
-        <div class="task-list" id="today-book-list-main"></div>
-        <div class="hint">撤销会撤销“你最近一次点过的那本书”。</div>
-      </div>
-
-      <div class="secondary-group">
-        <button class="btn-secondary" id="undo-btn">撤销一步 ⤺</button>
-        <button class="btn-secondary" id="reset-today-btn">重置今天</button>
-        <button class="btn-secondary danger" id="clear-all-btn">清空所有数据</button>
-      </div>
+      <button class="btn" id="done-btn">完成一页 ✅</button>
+      <button class="btn-secondary" id="add-task-btn">➕ 再添加一个任务（另一本书 / 另一段写作）</button>
 
       <div class="celebrate-area" id="celebrate-area"></div>
       <div class="message" id="message"></div>
@@ -313,1042 +187,953 @@ if (totalAllEl) {
         <div class="history-list" id="history-list"></div>
       </div>
 
+      <!-- 阅读统计 + 解题计数板 -->
       <div class="all-reading-section" id="all-reading-section">
-      <div class="all-reading-title">📊 阅读模式 - 历史统计（自使用本工具以来）</div>
-      <div class="hint" id="reading-total-all" style="margin:4px 0 8px;">
-      累计阅读：0 页
-      </div>
+        <div class="all-reading-title">📊 总面板（阅读 + 解题）</div>
+        <div class="hint" id="reading-total-all" style="margin:4px 0 8px;">
+          累计阅读：0 页 ｜ 累计天数：0 天 ｜ 平均每天：0.0 页/天 ｜ 连续阅读：0 天 ｜ 连续页数：0 页 ｜ 今日解题：0 ｜ 累计解题：0
+        </div>
+
+        <div class="all-reading-title" style="margin-top:10px;">🧠 解决问题计数板</div>
+        <div class="hint" id="solve-stats" style="margin:4px 0 8px;">今日：0（词汇0/定义0/句法0）｜ 累计：0</div>
+
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn-small active" id="solve-cat-vocab">词汇</button>
+          <button class="btn-small" id="solve-cat-def">定义</button>
+          <button class="btn-small" id="solve-cat-syntax">句法</button>
+        </div>
+        <button class="btn" id="solve-btn">我解决了一个问题 ✅</button>
+        <div class="hint" style="margin-top:6px;">每天 ≥ 5 个会触发一次“小烟花”。</div>
+
+        <div class="all-reading-title" style="margin-top:12px;">按天汇总（阅读）</div>
         <div class="all-reading-table" id="reading-table-container"></div>
-        <div class="chart-container">
-          <div class="chart-note">最近 30 天每天总页数（0页也会显示细柱，不会空白）</div>
-          <div class="chart" id="reading-chart"></div>
+
+        <div class="all-reading-title" style="margin-top:10px;">📚 按书汇总（阅读）</div>
+        <div class="all-reading-table" id="book-table-container"></div>
+
+        <div class="chart-note">最近 90 天每日阅读页数（低页数也会“抬高”显示）</div>
+        <div class="chart" id="reading-chart"></div>
+
+        <!-- 历史编辑 -->
+        <div class="all-reading-title" style="margin-top:12px;">✍️ 添加 / 修改历史记录（阅读）</div>
+        <div class="hint">你可以补录昨天/之前的记录；也可以在“原始记录”里点编辑。</div>
+        <input id="edit-date" type="date" />
+        <input id="edit-book" type="text" placeholder="书名（可留空）" />
+        <input id="edit-pages" type="number" min="0" placeholder="完成页数（例如 12）" />
+        <input id="edit-total" type="number" min="0" placeholder="目标页数（可选，不填=0）" />
+        <div class="btn-row">
+          <button class="btn-small primary" id="save-record-btn">保存（新增/更新）</button>
+          <button class="btn-small" id="clear-editor-btn">清空编辑器</button>
         </div>
+        <div class="hint" id="edit-status" style="margin-top:6px;"></div>
 
-        <div class="manual-section">
-          <div class="manual-title">✋ 手动添加一条阅读记录（补昨天 / 之前的阅读）</div>
-
-          <div class="manual-row">
-            <div class="col">
-              <label for="manual-date">日期</label>
-              <input type="date" id="manual-date" />
-            </div>
-            <div class="col">
-              <label for="manual-title">书名/任务名（可选）</label>
-              <input type="text" id="manual-title" placeholder="例如：Naval 英文 / 小说《XXX》" />
-            </div>
-          </div>
-
-          <div class="manual-row">
-            <div class="col">
-              <label for="manual-pages">完成页数</label>
-              <input type="number" id="manual-pages" min="1" placeholder="例如：25" />
-            </div>
-            <div class="col">
-              <label for="manual-label">标签（可选）</label>
-              <input type="text" id="manual-label" placeholder="Naval 英文 / 论文 / 小说阅读…" />
-            </div>
-          </div>
-
-          <button class="manual-btn" id="manual-add-btn">添加阅读记录</button>
-          <div class="hint">补录会计入历史与柱状图；同一天同一本书会合并。</div>
+        <!-- 原始记录（找 get） -->
+        <div class="all-reading-title" style="margin-top:12px;">🔎 原始记录（可搜索 get / gtd / 原著阅读营）</div>
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn-small" id="quick-get-btn">一键：get</button>
+          <button class="btn-small" id="quick-gtd-btn">一键：gtd</button>
+          <button class="btn-small" id="quick-origin-btn">一键：原著阅读营</button>
         </div>
+        <input id="raw-search" type="text" placeholder="输入关键词，比如 get / gtd / things done / 原著阅读营 / 《" style="margin-top:6px;margin-bottom:6px;" />
+        <div class="all-reading-table" id="raw-table-container"></div>
+
+        <div class="footer-tip">数据保存在本机浏览器里（每个人彼此独立）</div>
       </div>
-
-      <div class="footer-tip">数据保存在本机浏览器里，换代码也不会丢（本版支持自动迁移旧数据）～</div>
     </div>
   </div>
 
-  <script>
-    // ========= DOM =========
-    const modeButtons = document.querySelectorAll(".mode-btn");
-    const setupSection = document.getElementById("setup-section");
-    const mainSection = document.getElementById("main-section");
+<script>
+  // ===== DOM =====
+  const modeButtons = document.querySelectorAll(".mode-btn");
+  const totalLabel = document.getElementById("total-label");
+  const totalInput = document.getElementById("total-input");
+  const startBtn = document.getElementById("start-btn");
+  const setupSection = document.getElementById("setup-section");
+  const mainSection = document.getElementById("main-section");
+
+  const readTitleBlock = document.getElementById("read-title-block");
+  const writeLabelBlock = document.getElementById("write-label-block");
+  const bookInput = document.getElementById("book-input");
+  const bookSuggestions = document.getElementById("book-suggestions");
+  const labelInput = document.getElementById("label-input");
+  const addTaskBtn = document.getElementById("add-task-btn");
+
+  const taskSelect = document.getElementById("task-select");
+
+  const progressMainText = document.getElementById("progress-main-text");
+  const progressPercentText = document.getElementById("progress-percent-text");
+  const progressBarInner = document.getElementById("progress-bar-inner");
+  const statusText = document.getElementById("status-text");
+  const currentLabelEl = document.getElementById("current-label");
+
+  const doneBtn = document.getElementById("done-btn");
+  const celebrateArea = document.getElementById("celebrate-area");
+  const messageEl = document.getElementById("message");
+  const historyList = document.getElementById("history-list");
+  const weekSummary = document.getElementById("week-summary");
 
-    const writeSetup = document.getElementById("write-setup");
-    const totalInput = document.getElementById("total-input");
-    const labelInput = document.getElementById("label-input");
-
-    const multiSetup = document.getElementById("multi-setup");
-    const bookInput = document.getElementById("book-input");
-    const bookPagesInput = document.getElementById("book-pages-input");
-    const bookLabelInput = document.getElementById("book-label-input");
-    const addBookBtn = document.getElementById("add-book-btn");
-    const clearTodayBooksBtn = document.getElementById("clear-today-books-btn");
-    const todayBookListSetup = document.getElementById("today-book-list-setup");
-
-    const singleProgressArea = document.getElementById("single-progress-area");
-    const multiProgressArea = document.getElementById("multi-progress-area");
-
-    const progressMainText = document.getElementById("progress-main-text");
-    const progressPercentText = document.getElementById("progress-percent-text");
-    const progressBarInner = document.getElementById("progress-bar-inner");
-    const statusText = document.getElementById("status-text");
-    const currentLabelEl = document.getElementById("current-label");
-    const doneBtn = document.getElementById("done-btn");
-
-    const todayBookListMain = document.getElementById("today-book-list-main");
-
-    const startBtn = document.getElementById("start-btn");
-    const undoBtn = document.getElementById("undo-btn");
-    const resetTodayBtn = document.getElementById("reset-today-btn");
-    const clearAllBtn = document.getElementById("clear-all-btn");
-    const celebrateArea = document.getElementById("celebrate-area");
-    const messageEl = document.getElementById("message");
-    const historyList = document.getElementById("history-list");
-    const weekSummary = document.getElementById("week-summary");
-
-    const allReadingSection = document.getElementById("all-reading-section");
-    const readingTableContainer = document.getElementById("reading-table-container");
-    const readingChart = document.getElementById("reading-chart");
-
-    const manualDateInput = document.getElementById("manual-date");
-    const manualTitleInput = document.getElementById("manual-title");
-    const manualPagesInput = document.getElementById("manual-pages");
-    const manualLabelInput = document.getElementById("manual-label");
-    const manualAddBtn = document.getElementById("manual-add-btn");
-
-    // ========= IMPORTANT: STORAGE KEY (不要乱改，否则“看起来像丢档”) =========
-    // ✅ 你改代码也保留历史的关键：保持同一个 key
-    const STORAGE_KEY = "tinyRewardTracker_multi_read_v1";
-
-    // ✅ 自动迁移：从你旧版本/更旧版本里读数据并合并
-    const LEGACY_KEYS = [
-      "tinyRewardTracker_v3_addon",      // 你之前单任务版本
-      "tinyRewardTracker_multi_read_v1"  // 以防你之前用过同名（这里重复也无害）
-    ];
-
-    let currentMode = "read";
-
-    const MODE_CONFIG = {
-      read: { name: "阅读", unit: "页" },
-      write: { name: "写作", unit: "字" }
-    };
-
-    const emojis = [
-      { icon: "🦊", name: "小狐狸" },
-      { icon: "🐱", name: "小猫咪" },
-      { icon: "🐻", name: "小熊" },
-      { icon: "🐰", name: "小兔子" },
-      { icon: "🐼", name: "熊猫" },
-      { icon: "🎉", name: "烟花" },
-      { icon: "🎈", name: "气球" },
-      { icon: "✨", name: "星光" },
-      { icon: "🌈", name: "彩虹" }
-    ];
-
-    // 100条鼓励语（精简写法：直接复用你之前那份）
-    const messages = [
-      "It hurts but it builds up.","你已经不是原地踏步的人了。","再坚持一下，就比昨天的自己更强一点。","读和写，本来就是你的 superpower。","你在为未来的自己铺路。","慢慢来，但永远在路上。","今天也在为自由人生 +1。","此刻的专注，会在未来某天突然回报你。","你翻过的每一页，都是在翻开一个更大的世界。","别人可能在刷手机，而你在升级大脑。",
-      "你不是在完成任务，而是在雕刻自己的思考力。","能坐下来读书的你，已经赢过很多犹豫不决的时刻了。","就算只前进了一小步，也比停在原地好多了。","你正在成为那个小时候自己会觉得很酷的大人。","所有这些看似安静的努力，都会汇聚成很响亮的生活。","你并不需要一下子很厉害，只要一直在变厉害。","你现在读的每一页，都在给未来的自己撑腰。","此刻的你，其实已经很勇敢了。","别人可能看不见你在努力，但你自己知道就够了。","你不是在“熬”，你是在“生长”。",
-      "你感到难，是因为你真的在挑战自己。","书页在翻动，你的人生脚本也在偷偷改写。","你把时间投给了阅读，时间就会回报你以理解力。","一点点阅读，也是一种温柔而坚定的反抗。","你可以休息，但你从未放弃，这就很了不起。","大脑正在为你悄悄搭建新的“思维肌肉”。","你正在训练自己：可以不那么急，也不那么慌。","你不需要和任何人比，只要比昨天的自己轻微进步一点点。","今天的这些页数，会在某个关键时刻帮你撑起一整段思考。","你愿意读下去，本身就是对自己的一种温柔保护。",
-      "你在认真生活，而不是被生活推着走。","每一页都是在给自己的灵魂加一点配色。","你并不懒，你只是需要一点点被看见，而我看见你了。","你正在慢慢积累属于自己的、不可替代的视角。","世界有点吵，但你在为自己留出一小块安静的地方。","即便今天状态一般，你依然来了，这已经很了不起。","你现在做的事情，很可能是十年后的你会感谢的那种。","你对知识的温柔坚持，会变成对自己的坚定信任。","你现在种下的是理解力，而不是单纯的“页数”。","你肯停下刷手机去读书，这已经是罕见的温柔决心。",
-      "不是你有多自律，而是你真的在乎自己的成长。","你允许自己笨拙地前进，这是一种很高级的勇气。","今天这几页，看似微小，却在慢慢改变你的大方向。","你每读一句，世界就比一分钟前多了一点点不一样。","你没有被焦虑推着跑，而是在主动迈步。","当你选择读书，你已经在对抗“被动过日子”的命运。","你不急，但你从不停止，这很强大。","你正在练习与自己待在一起，而不是逃离自己。","感到累说明你在用力生活，而不是随波逐流。","大脑此刻一定在偷偷对你说：谢谢你还在喂养我。",
-      "你比自己以为的要坚定得多。","你在用时间，认真地喜欢上一个更扎实的自己。","这一页翻完，你对世界的理解又多了一层滤镜。","当下的你，正在为未来的从容打地基。","你可以质疑一切，但你从不质疑自己继续学习的权利。","每一次点“完成”，都是在告诉自己：我做得到。","你给了自己一个不被打扰的学习小宇宙。","别人看不见的章节，会在不久之后显现成你的底气。","你不是“必须”读书，而是你“选择”继续读书。","你正在用知识替换一部分恐惧和无力感。",
-      "你愿意停下来想一想，而不是匆忙路过，这是很温柔的力量。","你在缝补曾经那些觉得自己不够好的地方。","你一页一页地走远，而不是一刷一刷地空转。","你对自己的耐心，会成为你以后对世界的底气。","你没有放弃理解这个世界，也没有放弃理解自己。","你允许自己慢慢来，这本身就是一种成熟。","此刻也许有点辛苦，但这是你自己选择的辛苦。","你没有被“算了吧”的声音带走，而是留下来再看一页。","你在给自己的生活增加层次感，而不是只停留在表面。","你可以害怕，但你仍然在前进，这就够了。",
-      "你不是为了成绩在读，而是在为自己的人生打补丁。","每一次专注，都是在修复被碎片化夺走的注意力。","你给了自己的大脑一个被认真对待的机会。","你在认真对待那些曾经被忽略的好奇心。","你对世界的理解已经和一年前、一个月前不一样了。","你不是“时间不够”，你是在主动为阅读挤出空间。","这不是小事，这是你人生的核心工程之一。","你正在悄悄完成以前的你不敢想象的事情。","你现在的专注，比你想象中更加珍贵。","你有权利花时间在自己身上，这一点毋庸置疑。",
-      "你靠近书本的样子，本身就带着一点点光。","你现在的每一页，都可能成为你日后写作的素材。","你不是浪费时间，你是在慢慢扎根。","你没有立刻看到结果，但过程已经在偷偷塑造你。","你在练习对知识保持好奇，而不是冷漠麻木。","你在为未来的自由，悄悄存钱——只不过存的是脑力。","就算状态不完美，你也给了自己一个起步，这很难得。","你已经走出了“什么都不做”的那道门槛。","你在为那个更从容、更柔软也更有力量的自己打基础。","你能坐下来学习，就是在温柔地和焦虑保持距离。",
-      "你一步步走得很踏实，即便外界节奏再快。","你给自己留了一条不被他人支配的成长道路。","你没有在用“算了”结束今天，而是在用“再看一点点”延长自己。","你每一次按下完成，都是在对无力感说：我还是做到了。","你正在变成一个可以信任自己的大人。","你正在一点点兑现：我会好好对待自己这句话。","你不是孤独地读书，你是在和很多思想一起开会。","你愿意投入注意力，本身就是一种了不起的爱自己方式。","你在安静地为未来的选择，增加更多备选答案。","你对世界的问题并没有变少，但你在慢慢掌握提问和思考的方法。","你在把“我不行吧”悄悄改写成“我可以试试看”。","每一页都是你和这个世界之间的一次小对话。","你没有被今天的情绪完全支配，你还保留了一点主动权。","你此刻坐在这里，就是在为自己的人生认真投票。"
-    ];
-
-    const WRITE_STEP = 100;
-
-    // ========= UTIL =========
-    function todayString() {
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
-    }
-    function yesterdayString() {
-      const d = new Date(); d.setDate(d.getDate() - 1);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
-    }
-    function parseDateStr(s) { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
-    function getWeekStartTime(date) {
-      const d = new Date(date); d.setHours(0,0,0,0);
-      const day = (d.getDay() + 6) % 7; d.setDate(d.getDate() - day);
-      return d.getTime();
-    }
-    function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(2); }
-    function escapeHtml(str) {
-      return String(str || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    // ========= STATE LOADING + MIGRATION =========
-    function safeParse(raw) { try { return JSON.parse(raw); } catch { return null; } }
-
-    function normalizeState(obj) {
-      const base = { read: { today: null, history: [] }, write: { today: null, history: [] } };
-      if (!obj || typeof obj !== "object") return base;
-
-      if (!obj.read) obj.read = { today: null, history: [] };
-      if (!obj.write) obj.write = { today: null, history: [] };
-      if (!Array.isArray(obj.read.history)) obj.read.history = [];
-      if (!Array.isArray(obj.write.history)) obj.write.history = [];
-
-      // 兼容旧单任务阅读 today: {date,total,finished,label}
-      if (obj.read.today && obj.read.today.total !== undefined && !obj.read.today.tasks) {
-        const t = obj.read.today;
-        obj.read.today = {
-          date: t.date,
-          tasks: [{
-            id: uid(),
-            title: (t.label && t.label.trim()) ? t.label.trim() : "阅读任务",
-            total: Number(t.total || 0),
-            finished: Number(t.finished || 0),
-            label: (t.label || "").trim(),
-          }],
-          lastTouchedTaskId: null
-        };
-      }
-
-      // 兼容多任务结构缺字段
-      if (obj.read.today && obj.read.today.tasks && Array.isArray(obj.read.today.tasks)) {
-        obj.read.today.tasks = obj.read.today.tasks.map(t => ({
-          id: t.id || uid(),
-          title: (t.title || "未命名").trim(),
-          total: Number(t.total || 0),
-          finished: Number(t.finished || 0),
-          label: (t.label || "").trim(),
-        }));
-        if (!obj.read.today.lastTouchedTaskId) obj.read.today.lastTouchedTaskId = null;
-      }
-
-      // 兼容历史字段：允许 title 缺失
-      obj.read.history = obj.read.history.map(h => ({
-        date: h.date,
-        total: Number(h.total || 0),
-        finished: Number(h.finished || 0),
-        label: (h.label || "").trim(),
-        title: (h.title || "").trim()
-      }));
-      obj.write.history = obj.write.history.map(h => ({
-        date: h.date,
-        total: Number(h.total || 0),
-        finished: Number(h.finished || 0),
-        label: (h.label || "").trim(),
-        title: (h.title || "").trim()
-      }));
-
-      return obj;
-    }
-
-    function mergeHistories(target, incoming) {
-      // 阅读：按 date+title 合并（无title归为""）
-      const mapKey = (h) => `${h.date}__${(h.title||"").trim()}`;
-      const seen = new Map();
-      (target.read.history || []).forEach(h => seen.set(mapKey(h), h));
-
-      (incoming.read.history || []).forEach(h => {
-        const k = mapKey(h);
-        if (!seen.has(k)) {
-          target.read.history.push({ ...h });
-          seen.set(k, h);
-        } else {
-          // 合并策略：取更大的完成/目标，标签拼接去重（尽量不覆盖你的新数据）
-          const ex = seen.get(k);
-          ex.total = Math.max(ex.total || 0, h.total || 0);
-          ex.finished = Math.max(ex.finished || 0, h.finished || 0);
-          const labels = new Set(
-            [ex.label, h.label].filter(Boolean).join(" / ").split(" / ").map(s => s.trim()).filter(Boolean)
-          );
-          ex.label = Array.from(labels).join(" / ");
-        }
-      });
-
-      // 写作：按 date 合并
-      const wMap = new Map();
-      (target.write.history || []).forEach(h => wMap.set(h.date, h));
-      (incoming.write.history || []).forEach(h => {
-        if (!wMap.has(h.date)) {
-          target.write.history.push({ ...h });
-          wMap.set(h.date, h);
-        } else {
-          const ex = wMap.get(h.date);
-          ex.total = Math.max(ex.total || 0, h.total || 0);
-          ex.finished = Math.max(ex.finished || 0, h.finished || 0);
-          const labels = new Set(
-            [ex.label, h.label].filter(Boolean).join(" / ").split(" / ").map(s => s.trim()).filter(Boolean)
-          );
-          ex.label = Array.from(labels).join(" / ");
-        }
-      });
-
-      // 排序（按日期）
-      target.read.history.sort((a,b) => a.date.localeCompare(b.date));
-      target.write.history.sort((a,b) => a.date.localeCompare(b.date));
-      return target;
-    }
-
-    function loadState() {
-      // 先读当前 key
-      const raw = localStorage.getItem(STORAGE_KEY);
-      let current = normalizeState(safeParse(raw));
-
-      // 再尝试从旧 key 迁移并合并
-      LEGACY_KEYS.forEach(k => {
-        if (k === STORAGE_KEY) return;
-        const legacyRaw = localStorage.getItem(k);
-        if (!legacyRaw) return;
-        const legacy = normalizeState(safeParse(legacyRaw));
-        current = mergeHistories(current, legacy);
-      });
-
-      // 限制长度（防止无限增长）
-      if (current.read.history.length > 4000) current.read.history = current.read.history.slice(-4000);
-      if (current.write.history.length > 2000) current.write.history = current.write.history.slice(-2000);
-
-      // 保存一次，确保迁移落盘
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-      return current;
-    }
-
-    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-    function getModeState(mode) {
-      if (!state[mode]) state[mode] = { today: null, history: [] };
-      return state[mode];
-    }
-
-    // ========= STATE =========
-    let state = loadState();
-
-    // ========= CELEBRATE =========
-    function showCelebrate(big) {
-      messageEl.textContent = "";
-      if (big) {
-        for (let i = 0; i < 5; i++) {
-          const e = document.createElement("span");
-          e.classList.add("celebrate-item");
-          const item = emojis[Math.floor(Math.random() * emojis.length)];
-          e.textContent = item.icon;
-          e.style.left = 20 + Math.random() * 60 + "%";
-          celebrateArea.appendChild(e);
-          setTimeout(() => e.remove(), 900);
-        }
-        messageEl.innerHTML = `<span class="message-strong">完成目标啦！你真的很厉害 🎉</span>`;
-      } else {
-        const emojiSpan = document.createElement("span");
-        emojiSpan.classList.add("celebrate-item");
-        const item = emojis[Math.floor(Math.random() * emojis.length)];
-        emojiSpan.textContent = item.icon;
-        celebrateArea.appendChild(emojiSpan);
-        setTimeout(() => emojiSpan.remove(), 900);
-        const msg = messages[Math.floor(Math.random() * messages.length)];
-        messageEl.textContent = `${item.name}：${msg}`;
-      }
-    }
-
-    // ========= MODE UI =========
-    function setModeUI() {
-      if (currentMode === "read") {
-        multiSetup.classList.remove("hidden");
-        writeSetup.classList.add("hidden");
-      } else {
-        multiSetup.classList.add("hidden");
-        writeSetup.classList.remove("hidden");
-      }
-    }
-
-    // ========= READ MULTI TASKS =========
-    function ensureReadToday() {
-      const readState = getModeState("read");
-      const totalAllEl = document.getElementById("reading-total-all");
-      const today = todayString();
-      if (!readState.today || readState.today.date !== today) {
-        readState.today = { date: today, tasks: [], lastTouchedTaskId: null };
-      }
-      if (!Array.isArray(readState.today.tasks)) readState.today.tasks = [];
-      return readState.today;
-    }
-
-    function upsertReadHistoryForTodayTask(task) {
-      const readState = getModeState("read");
-      const totalAllEl = document.getElementById("reading-total-all");
-      const today = todayString();
-      const title = (task.title || "").trim();
-      const label = (task.label || "").trim();
-      const idx = readState.history.findIndex(h => h.date === today && (h.title || "").trim() === title);
-      if (idx >= 0) {
-        readState.history[idx].finished = Number(task.finished || 0);
-        readState.history[idx].total = Number(task.total || 0);
-        readState.history[idx].label = label;
-      } else {
-        readState.history.push({ date: today, finished: Number(task.finished||0), total: Number(task.total||0), label, title });
-      }
-      readState.history.sort((a,b) => a.date.localeCompare(b.date));
-      if (readState.history.length > 4000) readState.history = readState.history.slice(-4000);
-    }
-
-    function addTodayTask(title, total, label) {
-      const todayObj = ensureReadToday();
-      const cleanTitle = (title || "").trim() || "未命名";
-      const cleanLabel = (label || "").trim();
-      const task = { id: uid(), title: cleanTitle, total: Number(total), finished: 0, label: cleanLabel };
-      todayObj.tasks.push(task);
-      todayObj.lastTouchedTaskId = task.id;
-      saveState();
-      refreshReadUI();
-    }
-
-    function removeTodayTask(taskId) {
-      if (!confirm("确定删除这本书的今日任务吗？（不会删历史记录，只删今天列表）")) return;
-      const readState = getModeState("read");
-      const today = todayString();
-      if (!readState.today || readState.today.date !== today) return;
-      readState.today.tasks = (readState.today.tasks || []).filter(t => t.id !== taskId);
-      if (readState.today.lastTouchedTaskId === taskId) readState.today.lastTouchedTaskId = null;
-      saveState();
-      refreshReadUI();
-    }
-
-    function addTargetToTask(taskId, delta) {
-      const readState = getModeState("read");
-      const today = todayString();
-      if (!readState.today || readState.today.date !== today) {
-        alert("请先开始今天的任务~");
-        return;
-      }
-      const task = (readState.today.tasks || []).find(t => t.id === taskId);
-      if (!task) return;
-      const add = Number(delta || 0);
-      if (!add || add <= 0) return;
-
-      task.total = Number(task.total || 0) + add;
-      readState.today.lastTouchedTaskId = task.id;
-
-      // 同步到历史（当天该书的目标变更）
-      upsertReadHistoryForTodayTask(task);
-
-      saveState();
-      refreshReadUI();
-      messageEl.textContent = `已给《${task.title}》目标 +${add} 页 ✅`;
-    }
-
-    function addOnePageToTask(taskId) {
-      const readState = getModeState("read");
-      const today = todayString();
-      if (!readState.today || readState.today.date !== today) {
-        alert("请先开始今天的任务~");
-        return;
-      }
-      const task = (readState.today.tasks || []).find(t => t.id === taskId);
-      if (!task) return;
-
-      const wasCompleted = (task.total > 0) && (task.finished >= task.total);
-
-      task.finished = Number(task.finished || 0) + 1;
-      readState.today.lastTouchedTaskId = task.id;
-
-      upsertReadHistoryForTodayTask(task);
-
-      saveState();
-      refreshReadUI();
-
-      const nowCompleted = (task.total > 0) && (task.finished >= task.total);
-      if (!wasCompleted && nowCompleted) showCelebrate(true);
-      else showCelebrate(false);
-    }
-
-    function clearTodayBookList() {
-      if (!confirm("确定清空今天书单吗？（只清今天任务，不影响历史）")) return;
-      const readState = getModeState("read");
-      const today = todayString();
-      readState.today = { date: today, tasks: [], lastTouchedTaskId: null };
-      saveState();
-      refreshReadUI();
-    }
-
-    // ========= RENDER TASKS =========
-    function renderTodayBooks(listEl, tasks, mode) {
-      listEl.innerHTML = "";
-      if (!tasks || tasks.length === 0) {
-        const div = document.createElement("div");
-        div.className = "hint";
-        div.textContent = (mode === "setup")
-          ? "今天还没添加书～先添加一本吧。"
-          : "今天还没添加书～回到上方设定区添加。";
-        listEl.appendChild(div);
-        return;
-      }
-
-      tasks.forEach(t => {
-        const percentRaw = t.total > 0 ? (t.finished / t.total) * 100 : 0;
-        const barPercent = Math.max(0, Math.min(percentRaw, 100));
-        const percentText = percentRaw <= 100 ? `${Math.round(percentRaw)}%` : `100%+`;
-
-        const item = document.createElement("div");
-        item.className = "task-item";
-
-        const labelText = (t.label && t.label.trim()) ? ` · ${t.label.trim()}` : "";
-        item.innerHTML = `
-          <div class="task-head">
-            <div class="task-name">${escapeHtml(t.title || "未命名")}</div>
-            <div class="task-meta">${t.finished}/${t.total} 页（${percentText}）</div>
-          </div>
-          <div class="task-progressline">
-            <div>${escapeHtml(labelText)}</div>
-            <div>${t.finished >= t.total ? "✅ 已达标" : "⏳ 进行中"}</div>
-          </div>
-          <div class="task-bar"><div class="task-bar-inner" style="width:${barPercent}%"></div></div>
-        `;
-
-        const ops = document.createElement("div");
-        ops.className = "task-ops";
-
-        if (mode === "main") {
-          const plus = document.createElement("button");
-          plus.className = "mini-btn primary";
-          plus.textContent = "+1 页 ✅";
-          plus.addEventListener("click", () => addOnePageToTask(t.id));
-
-          // ✅ 新增：目标加页按钮
-          const add5 = document.createElement("button");
-          add5.className = "mini-btn";
-          add5.textContent = "目标 +5";
-          add5.addEventListener("click", () => addTargetToTask(t.id, 5));
-
-          const add10 = document.createElement("button");
-          add10.className = "mini-btn";
-          add10.textContent = "目标 +10";
-          add10.addEventListener("click", () => addTargetToTask(t.id, 10));
-
-          const custom = document.createElement("button");
-          custom.className = "mini-btn";
-          custom.textContent = "自定义 +";
-          custom.addEventListener("click", () => {
-            const v = prompt("给这本书目标加多少页？（请输入正整数）", "10");
-            if (v === null) return;
-            const n = parseInt(v, 10);
-            if (!n || n <= 0) { alert("请输入正整数～"); return; }
-            addTargetToTask(t.id, n);
-          });
-
-          const remove = document.createElement("button");
-          remove.className = "mini-btn";
-          remove.textContent = "删除本书";
-          remove.addEventListener("click", () => removeTodayTask(t.id));
-
-          // 排列：+1、目标+、删书
-          ops.appendChild(plus);
-          ops.appendChild(add5);
-          ops.appendChild(add10);
-          ops.appendChild(custom);
-          ops.appendChild(remove);
-        } else {
-          const remove = document.createElement("button");
-          remove.className = "mini-btn";
-          remove.textContent = "删除";
-          remove.addEventListener("click", () => removeTodayTask(t.id));
-          ops.appendChild(remove);
-        }
-
-        item.appendChild(ops);
-        listEl.appendChild(item);
-      });
-    }
-
-    function refreshReadUI() {
-      const readToday = ensureReadToday();
-      renderTodayBooks(todayBookListSetup, readToday.tasks, "setup");
-      renderTodayBooks(todayBookListMain, readToday.tasks, "main");
-      updateHistoryView();
-    }
-
-    // ========= WRITE =========
-    function setWriteTodayTask(total, label) {
-      const writeState = getModeState("write");
-      const today = todayString();
-      const cleanLabel = (label || "").trim();
-      writeState.today = { date: today, total: Number(total), finished: 0, label: cleanLabel };
-
-      const idx = writeState.history.findIndex(h => h.date === today);
-      const entry = { date: today, total: Number(total), finished: 0, label: cleanLabel, title: "" };
-      if (idx >= 0) writeState.history[idx] = entry;
-      else writeState.history.push(entry);
-
-      writeState.history.sort((a,b) => a.date.localeCompare(b.date));
-      if (writeState.history.length > 2000) writeState.history = writeState.history.slice(-2000);
-
-      saveState();
-      updateHistoryView();
-    }
-
-    function updateWriteTodayFinished(newFinished) {
-      const writeState = getModeState("write");
-      const today = todayString();
-      if (!writeState.today || writeState.today.date !== today) return;
-      writeState.today.finished = Number(newFinished || 0);
-
-      const idx = writeState.history.findIndex(h => h.date === today);
-      if (idx >= 0) {
-        writeState.history[idx].finished = writeState.today.finished;
-        writeState.history[idx].total = writeState.today.total;
-        writeState.history[idx].label = writeState.today.label || "";
-      } else {
-        writeState.history.push({
-          date: today,
-          total: writeState.today.total,
-          finished: writeState.today.finished,
-          label: writeState.today.label || "",
-          title: ""
-        });
-      }
-      saveState();
-      updateHistoryView();
-    }
-
-    function updateWriteProgressDisplay(finished, total, label) {
-      finished = finished || 0;
-      total = total || 0;
-      progressMainText.textContent = `已完成 ${finished} / ${total} 字`;
-
-      let percentRaw = total > 0 ? (finished / total) * 100 : 0;
-      if (!isFinite(percentRaw)) percentRaw = 0;
-      const barPercent = Math.max(0, Math.min(percentRaw, 100));
-      const percentDisplay = percentRaw <= 100 ? `${Math.round(percentRaw)}%` : `100%+`;
-
-      progressPercentText.textContent = percentDisplay;
-      progressBarInner.style.width = `${barPercent}%`;
-
-      if (percentRaw === 0) statusText.innerHTML = "慢慢来，每一点都算数 ✨";
-      else if (percentRaw < 40) statusText.innerHTML = "已经起步啦，继续保持～";
-      else if (percentRaw < 80) statusText.innerHTML = "已经过半啦，看得出你真的在努力 ✍️";
-      else if (percentRaw < 100) statusText.innerHTML = "快到终点啦，再坚持一下！";
-      else if (percentRaw < 150) statusText.innerHTML = "目标完成啦，后面都是甜甜的加餐 🎂";
-      else statusText.innerHTML = "超额很多了，今天真的很厉害！🔥";
-
-      if (label && label.trim()) currentLabelEl.innerHTML = `当前项目：<span>${escapeHtml(label.trim())}</span>`;
-      else currentLabelEl.textContent = "";
-    }
-
-    // ========= HISTORY + STATS =========
-    function updateHistoryView() {
-      const modeState = getModeState(currentMode);
-      const history = modeState.history || [];
-      if (!history.length) {
-        historyList.textContent = "暂无数据，先完成一次任务试试～";
-        weekSummary.textContent = "";
-        updateReadingStats();
-        return;
-      }
-
-      const today = todayString();
-      const thisWeekStart = getWeekStartTime(parseDateStr(today));
-
-      let weekFinished = 0;
-      let weekTotal = 0;
-      history.forEach(item => {
-        const ws = getWeekStartTime(parseDateStr(item.date));
-        if (ws === thisWeekStart) {
-          weekFinished += item.finished || 0;
-          weekTotal += item.total || 0;
-        }
-      });
-
-      const unit = MODE_CONFIG[currentMode].unit;
-      if (weekTotal > 0) {
-        const percent = Math.round((weekFinished / weekTotal) * 100);
-        weekSummary.textContent = `本周合计：${weekFinished}/${weekTotal}${unit}（约 ${percent}%）`;
-      } else {
-        weekSummary.textContent = "本周暂未记录任务";
-      }
-
-      const last7 = history.slice(-7).reverse();
-      historyList.innerHTML = "";
-      last7.forEach(item => {
-        const div = document.createElement("div");
-        div.classList.add("history-item");
-        const percent = item.total > 0 ? Math.round((item.finished / item.total) * 100) : 0;
-        const percentText = percent <= 100 ? `${percent}%` : `${percent}%+`;
-        const labelText = item.label ? ` · ${item.label}` : "";
-        const titleText = item.title ? `《${item.title}》` : "";
-        div.innerHTML = `
-          <span class="history-date">${item.date} ${escapeHtml(titleText)}${escapeHtml(labelText)}</span>
-          <span class="history-detail">${item.finished}/${item.total}${unit}（${percentText}）</span>
-        `;
-        historyList.appendChild(div);
-      });
-
-      updateReadingStats();
-    }
-
-    // ✅ 修复“柱状图不显示”：无历史提示 / 0页也画细柱
-   function updateReadingStats() {
-  // 只在阅读模式显示
-  const allReadingSection = document.getElementById("all-reading-section");
   const readingTableContainer = document.getElementById("reading-table-container");
+  const bookTableContainer = document.getElementById("book-table-container");
   const readingChart = document.getElementById("reading-chart");
   const totalAllEl = document.getElementById("reading-total-all");
 
-  if (!allReadingSection || !readingTableContainer || !readingChart) {
-    // 页面里缺组件：直接返回，避免报错导致整页不渲染
-    return;
+  const editDate = document.getElementById("edit-date");
+  const editBook = document.getElementById("edit-book");
+  const editPages = document.getElementById("edit-pages");
+  const editTotal = document.getElementById("edit-total");
+  const saveRecordBtn = document.getElementById("save-record-btn");
+  const clearEditorBtn = document.getElementById("clear-editor-btn");
+  const editStatus = document.getElementById("edit-status");
+
+  const rawSearch = document.getElementById("raw-search");
+  const rawTableContainer = document.getElementById("raw-table-container");
+  const quickGetBtn = document.getElementById("quick-get-btn");
+  const quickGtdBtn = document.getElementById("quick-gtd-btn");
+  const quickOriginBtn = document.getElementById("quick-origin-btn");
+
+  // Solve board
+  const solveStatsEl = document.getElementById("solve-stats");
+  const solveBtn = document.getElementById("solve-btn");
+  const solveCatVocab = document.getElementById("solve-cat-vocab");
+  const solveCatDef = document.getElementById("solve-cat-def");
+  const solveCatSyntax = document.getElementById("solve-cat-syntax");
+
+  // ===== Storage keys =====
+  const STORAGE_KEY = "tinyRewardTracker_v3_addon";   // 保留旧历史
+  const BOOKS_KEY   = "tinyRewardTracker_books_v1";
+  const SOLVE_KEY   = "tinyRewardTracker_solve_v2";   // 新：按天+分类
+  const SOLVE_BADGE_KEY = "tinyRewardTracker_solve_badge_v1"; // 新：每日>=5的触发记忆
+
+  // ===== Mode config =====
+  let currentMode = "read";
+  const MODE_CONFIG = {
+    read:  { name: "阅读", unit: "页", totalLabel: "今天打算读多少页？", doneButton: "完成一页 ✅" },
+    write: { name: "写作", unit: "字", totalLabel: "今天打算写多少字？", doneButton: "再写一点 ✅" }
+  };
+  const WRITE_STEP = 100;
+
+  const emojis = [
+    { icon: "🦊", name: "小狐狸" }, { icon: "🐱", name: "小猫咪" }, { icon: "🐻", name: "小熊" },
+    { icon: "🐰", name: "小兔子" }, { icon: "🐼", name: "熊猫" }, { icon: "🎉", name: "烟花" },
+    { icon: "✨", name: "星光" }, { icon: "🌈", name: "彩虹" }
+  ];
+  const messages = ["继续就对了。","你在变强。","今天也算数。","慢慢来，但不停。","你在向前。","做到了就很好。"];
+
+  // ===== State =====
+  let state = loadState();
+  normalizeHistoryIds();
+  saveState();
+
+  let editingRecordId = null;
+  let solveCat = "vocab"; // vocab/def/syntax
+
+  function todayString() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   }
-
-  if (currentMode !== "read") {
-    allReadingSection.style.display = "none";
-    return;
+  function parseDateStr(s) {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
   }
-  allReadingSection.style.display = "block";
-
-  const readState = getModeState("read");
-  const history = (readState && readState.history) ? readState.history : [];
-
-  // 累计总页数（所有记录）
-  const totalAllPages = history.reduce((sum, item) => sum + Number(item.finished || 0), 0);
-  if (totalAllEl) totalAllEl.textContent = `累计阅读：${totalAllPages} 页`;
-
-  if (!history.length) {
-    readingTableContainer.textContent = "暂无阅读记录～";
-    readingChart.innerHTML = "<div class='hint'>暂无数据，完成一次阅读后这里会出现柱状图。</div>";
-    return;
+  function getWeekStartTime(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    const day = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - day);
+    return d.getTime();
   }
+  function emptyModeState() { return { todayTasks: [], activeTaskId: null, history: [] }; }
 
-  // 按天汇总：date -> { finished, titles:Set, labels:Set }
-  const dailyMap = new Map();
-  history.forEach(item => {
-    const key = item.date;
-    if (!key) return;
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { read: emptyModeState(), write: emptyModeState() };
+      const parsed = JSON.parse(raw);
 
-    if (!dailyMap.has(key)) {
-      dailyMap.set(key, { finished: 0, titles: new Set(), labels: new Set() });
-    }
-    const entry = dailyMap.get(key);
-    entry.finished += Number(item.finished || 0);
-    if (item.title && String(item.title).trim()) entry.titles.add(String(item.title).trim());
-    if (item.label && String(item.label).trim()) entry.labels.add(String(item.label).trim());
-  });
+      if (!parsed.read) parsed.read = emptyModeState();
+      if (!parsed.write) parsed.write = emptyModeState();
 
-  const dates = Array.from(dailyMap.keys()).sort();
-  if (!dates.length) {
-    readingTableContainer.textContent = "暂无可用数据～";
-    readingChart.innerHTML = "<div class='hint'>暂无可展示的日期。</div>";
-    return;
-  }
+      ["read","write"].forEach(mode => {
+        const m = parsed[mode];
+        if (!m.history) m.history = [];
+        m.history = m.history.map(item => ({
+          id: item.id || null,
+          date: item.date,
+          total: Number(item.total || 0),
+          finished: Number(item.finished || 0),
+          label: item.label || ""
+        }));
+        if (!m.todayTasks) m.todayTasks = [];
+        if (!m.activeTaskId) m.activeTaskId = null;
 
-  // 表格
-  let html =
-    '<table class="reading-table"><thead><tr><th>日期</th><th>总页数</th><th>书名/标签</th></tr></thead><tbody>';
-  dates.forEach(d => {
-    const entry = dailyMap.get(d);
-    const titles = Array.from(entry.titles).join(" / ") || "-";
-    const labels = Array.from(entry.labels).join(" / ");
-    const mix = labels ? `${titles} · ${labels}` : titles;
-
-    html += `<tr><td>${d}</td><td>${entry.finished}</td><td>${escapeHtml(mix)}</td></tr>`;
-  });
-  html += "</tbody></table>";
-  readingTableContainer.innerHTML = html;
-
-  // 柱状图：最近30天
-  // ===== 柱状图：最近 N 天（更长更有激励）=====
-const DAYS_TO_SHOW = 90; // 你可以改成 60 / 90 / 120
-const recentDates = dates.slice(-DAYS_TO_SHOW);
-
-// 计算 streak：从最近一天往回连续（当天总页数>0才算）
-const setRecent = new Set(recentDates);
-let streak = 0;
-if (recentDates.length > 0) {
-  let cursor = new Date(parseDateStr(recentDates[recentDates.length - 1]));
-  while (true) {
-    const y = cursor.getFullYear();
-    const m = String(cursor.getMonth() + 1).padStart(2, "0");
-    const dd = String(cursor.getDate()).padStart(2, "0");
-    const key = `${y}-${m}-${dd}`;
-
-    if (!setRecent.has(key)) break; // 图里没有这天（说明太久以前）
-    const v = (dailyMap.get(key)?.finished) || 0;
-    if (v <= 0) break;              // 断了
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-}
-
-// ✅ 把 streak 数字显示出来（你之前的统计区 id：reading-total-all）
-if (totalAllEl) {
-  // 这里不覆盖你上面累计/平均那段文字的话，就追加 streak
-  // 如果你已经设置了 totalAllEl.textContent，就用下面这行“追加”
-  totalAllEl.textContent = `${totalAllEl.textContent} ｜ 连续阅读：${streak} 天`;
-}
-
-// ✅ 非线性高度：让 5 页也“看起来很高”
-// 用 sqrt：小数值被抬高、极大值不会夸张到压扁其他柱
-const values = recentDates.map(d => (dailyMap.get(d)?.finished) || 0);
-const maxValue = Math.max(...values, 1);
-const maxSqrt = Math.sqrt(maxValue);
-
-readingChart.innerHTML = "";
-
-recentDates.forEach((d, idx) => {
-  const v = (dailyMap.get(d)?.finished) || 0;
-
-  const barWrapper = document.createElement("div");
-  barWrapper.classList.add("chart-bar-wrapper");
-
-  const bar = document.createElement("div");
-  bar.classList.add("chart-bar");
-
-  // ✅ 高度公式（关键）
-  // 1) v=0 → 给一个很低但可见的高度（避免空）
-  // 2) v=5 → sqrt(5)≈2.236，会被明显抬高
-  // 3) 高值也不会把其他柱压扁
-  const minH = 10; // 最小高度（让低值也“有存在感”）
-  const h = v <= 0 ? 6 : Math.max(minH, (Math.sqrt(v) / maxSqrt) * 100);
-  bar.style.height = `${h}%`;
-
-  // ✅ streak 高亮：最后 streak 根柱子加 class
-  // recentDates 是从旧到新，所以 streak 区间在尾部
-  if (streak > 0 && idx >= recentDates.length - streak) {
-    bar.classList.add("streak");
-    barWrapper.classList.add("streak");
-  }
-
-  const label = document.createElement("div");
-  label.classList.add("chart-bar-label");
-  label.textContent = `${d.slice(5)}\n${v}`;
-
-  barWrapper.appendChild(bar);
-  barWrapper.appendChild(label);
-  readingChart.appendChild(barWrapper);
-});
-}
-
-    // ========= INIT =========
-    function initFromState() {
-      setModeUI();
-      manualDateInput.value = yesterdayString();
-      manualTitleInput.value = "";
-      manualPagesInput.value = "";
-      manualLabelInput.value = "";
-
-      const today = todayString();
-
-      if (currentMode === "read") {
-        const readState = getModeState("read");
-        const hasTodayTasks = readState.today && readState.today.date === today && (readState.today.tasks || []).length > 0;
-
-        if (hasTodayTasks) {
-          setupSection.classList.add("hidden");
-          mainSection.classList.remove("hidden");
-          singleProgressArea.classList.add("hidden");
-          multiProgressArea.classList.remove("hidden");
-          refreshReadUI();
-        } else {
-          setupSection.classList.remove("hidden");
-          mainSection.classList.add("hidden");
-          refreshReadUI();
+        if (m.today && m.today.date) {
+          const t = m.today;
+          const id = t.id || `legacy-${t.date}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          m.todayTasks.push({
+            id,
+            date: t.date,
+            total: Number(t.total || 0),
+            finished: Number(t.finished || 0),
+            label: t.label || ""
+          });
+          m.activeTaskId = id;
+          m.today = null;
         }
-      } else {
-        const writeState = getModeState("write");
-        const hasToday = writeState.today && writeState.today.date === today;
+      });
 
-        if (hasToday) {
-          setupSection.classList.add("hidden");
-          mainSection.classList.remove("hidden");
-          singleProgressArea.classList.remove("hidden");
-          multiProgressArea.classList.add("hidden");
-
-          totalInput.value = writeState.today.total;
-          labelInput.value = writeState.today.label || "";
-          updateWriteProgressDisplay(writeState.today.finished, writeState.today.total, writeState.today.label || "");
-        } else {
-          setupSection.classList.remove("hidden");
-          mainSection.classList.add("hidden");
-          totalInput.value = "";
-          labelInput.value = "";
-        }
-        updateHistoryView();
-      }
+      return parsed;
+    } catch {
+      return { read: emptyModeState(), write: emptyModeState() };
     }
-
-    // ========= EVENTS =========
-    modeButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const mode = btn.getAttribute("data-mode");
-        if (mode === currentMode) return;
-        currentMode = mode;
-        modeButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        celebrateArea.innerHTML = "";
-        messageEl.textContent = "";
-        initFromState();
+  }
+  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function getModeState(mode) {
+    if (!state[mode]) state[mode] = emptyModeState();
+    if (!state[mode].todayTasks) state[mode].todayTasks = [];
+    if (!state[mode].history) state[mode].history = [];
+    return state[mode];
+  }
+  function normalizeHistoryIds() {
+    ["read","write"].forEach(mode => {
+      const m = getModeState(mode);
+      m.history.forEach((it, idx) => {
+        if (!it.id) it.id = `h-${mode}-${it.date || "nodate"}-${idx}-${Math.random().toString(16).slice(2)}`;
+      });
+      m.todayTasks.forEach((t, idx) => {
+        if (!t.id) t.id = `t-${mode}-${t.date || "nodate"}-${idx}-${Math.random().toString(16).slice(2)}`;
       });
     });
+  }
 
-    addBookBtn.addEventListener("click", () => {
-      const title = bookInput.value;
-      const pages = parseInt(bookPagesInput.value, 10);
-      const label = bookLabelInput.value;
-      if (!pages || pages <= 0) { alert("请填写一个大于 0 的目标页数～"); return; }
-      addTodayTask(title, pages, label);
-      bookInput.value = "";
-      bookPagesInput.value = "";
-      bookLabelInput.value = "";
+  // ===== Utils =====
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#39;");
+  }
+
+  // ===== Book suggestions =====
+  function loadBooks() {
+    try { return JSON.parse(localStorage.getItem(BOOKS_KEY) || "[]"); }
+    catch { return []; }
+  }
+  function saveBookTitle(title) {
+    const t = (title || "").trim();
+    if (!t) return;
+    const books = loadBooks();
+    if (!books.includes(t)) {
+      books.unshift(t);
+      if (books.length > 80) books.length = 80;
+      localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
+    }
+  }
+  function renderBookSuggestions() {
+    const books = loadBooks();
+    bookSuggestions.innerHTML = books.map(b => `<option value="${escapeHtml(b)}"></option>`).join("");
+  }
+
+  // ===== Celebrate =====
+  function popSmallFireworks(text) {
+    messageEl.textContent = "";
+    messageEl.className = "message";
+    for (let i = 0; i < 3; i++) {
+      const e = document.createElement("span");
+      e.classList.add("celebrate-item");
+      const item = emojis[Math.floor(Math.random() * emojis.length)];
+      e.textContent = item.icon;
+      e.style.left = 25 + Math.random() * 50 + "%";
+      celebrateArea.appendChild(e);
+      setTimeout(() => e.remove(), 900);
+    }
+    messageEl.innerHTML = `<span class="message-strong">${escapeHtml(text)}</span>`;
+  }
+
+  // ===== Solve board storage =====
+  function loadSolve() {
+    try { return JSON.parse(localStorage.getItem(SOLVE_KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function saveSolve(obj) {
+    localStorage.setItem(SOLVE_KEY, JSON.stringify(obj));
+  }
+  function loadSolveBadge() {
+    try { return JSON.parse(localStorage.getItem(SOLVE_BADGE_KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function saveSolveBadge(obj) {
+    localStorage.setItem(SOLVE_BADGE_KEY, JSON.stringify(obj));
+  }
+
+  function solveEntryFor(date) {
+    const all = loadSolve();
+    if (!all[date]) all[date] = { vocab: 0, def: 0, syntax: 0 };
+    return { all, entry: all[date] };
+  }
+
+  function solveTodayCounts() {
+    const all = loadSolve();
+    const t = todayString();
+    const e = all[t] || { vocab:0, def:0, syntax:0 };
+    const todayTotal = (e.vocab||0) + (e.def||0) + (e.syntax||0);
+    return { t, e, todayTotal, all };
+  }
+
+  function solveTotals() {
+    const all = loadSolve();
+    let total = 0;
+    Object.keys(all).forEach(d => {
+      const e = all[d] || {};
+      total += (e.vocab||0) + (e.def||0) + (e.syntax||0);
+    });
+    return total;
+  }
+
+  function updateSolveView() {
+    const { e } = solveTodayCounts();
+    const todayTotal = (e.vocab||0) + (e.def||0) + (e.syntax||0);
+    const total = solveTotals();
+    solveStatsEl.textContent = `今日：${todayTotal}（词汇${e.vocab||0}/定义${e.def||0}/句法${e.syntax||0}）｜ 累计：${total}`;
+  }
+
+  function maybeSolveFireworks() {
+    const { t, e } = solveTodayCounts();
+    const todayTotal = (e.vocab||0) + (e.def||0) + (e.syntax||0);
+
+    if (todayTotal < 5) return;
+
+    const badge = loadSolveBadge();
+    if (badge[t]) return; // 今天已经触发过
+
+    badge[t] = true;
+    saveSolveBadge(badge);
+
+    popSmallFireworks("解题 ≥ 5 ✅ 你今天脑子很清楚！");
+  }
+
+  function setSolveCategory(cat) {
+    solveCat = cat;
+    solveCatVocab.classList.remove("active");
+    solveCatDef.classList.remove("active");
+    solveCatSyntax.classList.remove("active");
+    if (cat === "vocab") solveCatVocab.classList.add("active");
+    if (cat === "def") solveCatDef.classList.add("active");
+    if (cat === "syntax") solveCatSyntax.classList.add("active");
+  }
+
+  // ===== Today tasks helpers =====
+  function ensureTodayTasks(modeState) {
+    const today = todayString();
+    modeState.todayTasks = (modeState.todayTasks || []).filter(t => t && t.date === today);
+    if (modeState.todayTasks.length) {
+      if (!modeState.activeTaskId || !modeState.todayTasks.some(t => t.id === modeState.activeTaskId)) {
+        modeState.activeTaskId = modeState.todayTasks[0].id;
+      }
+    } else {
+      modeState.activeTaskId = null;
+    }
+  }
+  function getActiveTask() {
+    const modeState = getModeState(currentMode);
+    ensureTodayTasks(modeState);
+    return modeState.todayTasks.find(t => t.id === modeState.activeTaskId) || null;
+  }
+  function renderTaskSelect() {
+    const modeState = getModeState(currentMode);
+    ensureTodayTasks(modeState);
+
+    taskSelect.innerHTML = "";
+    if (!modeState.todayTasks.length) return;
+
+    modeState.todayTasks.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = (t.label && t.label.trim()) ? t.label.trim() : "（未命名）";
+      taskSelect.appendChild(opt);
     });
 
-    clearTodayBooksBtn.addEventListener("click", () => clearTodayBookList());
+    taskSelect.value = modeState.activeTaskId;
 
-    startBtn.addEventListener("click", () => {
-      if (currentMode === "read") {
-        const readToday = ensureReadToday();
-        if (!readToday.tasks || readToday.tasks.length === 0) {
-          alert("请先添加至少一本书的任务～");
-          return;
-        }
-        setupSection.classList.add("hidden");
-        mainSection.classList.remove("hidden");
-        singleProgressArea.classList.add("hidden");
-        multiProgressArea.classList.remove("hidden");
-        refreshReadUI();
-        return;
+    taskSelect.onchange = () => {
+      modeState.activeTaskId = taskSelect.value;
+      saveState();
+      const active = getActiveTask();
+      if (active) updateProgressDisplay(active.finished, active.total, active.label);
+    };
+  }
+
+  // ===== UI =====
+  function applyModeUI() {
+    const conf = MODE_CONFIG[currentMode];
+    totalLabel.textContent = conf.totalLabel;
+    doneBtn.textContent = conf.doneButton;
+
+    if (currentMode === "read") {
+      readTitleBlock.classList.remove("hidden");
+      writeLabelBlock.classList.add("hidden");
+      renderBookSuggestions();
+    } else {
+      readTitleBlock.classList.add("hidden");
+      writeLabelBlock.classList.remove("hidden");
+    }
+  }
+  function updateCurrentLabel(label) {
+    const t = (label || "").trim();
+    if (t) currentLabelEl.innerHTML = `当前：<span>${escapeHtml(t)}</span>`;
+    else currentLabelEl.textContent = "";
+  }
+  function updateProgressDisplay(finished, total, label) {
+    const conf = MODE_CONFIG[currentMode];
+    finished = Number(finished || 0);
+    total = Number(total || 0);
+
+    progressMainText.textContent = total > 0
+      ? `已完成 ${finished} / ${total} ${conf.unit}`
+      : `已完成 0 / 0 ${conf.unit}`;
+
+    let percentRaw = total > 0 ? (finished / total) * 100 : 0;
+    if (!isFinite(percentRaw)) percentRaw = 0;
+
+    const barPercent = Math.max(0, Math.min(percentRaw, 100));
+    progressPercentText.textContent = percentRaw <= 100 ? `${Math.round(percentRaw)}%` : `100%+`;
+    progressBarInner.style.width = `${barPercent}%`;
+
+    if (percentRaw === 0) statusText.textContent = "慢慢来，每一点都算数 ✨";
+    else if (percentRaw < 40) statusText.textContent = "已经起步啦～";
+    else if (percentRaw < 80) statusText.textContent = "已经过半啦～";
+    else if (percentRaw < 100) statusText.textContent = "快到终点啦～";
+    else statusText.textContent = "目标完成啦～继续也可以！";
+
+    updateCurrentLabel(label);
+  }
+  function showCelebrate(big) {
+    messageEl.textContent = "";
+    messageEl.className = "message";
+
+    if (big) {
+      for (let i = 0; i < 5; i++) {
+        const e = document.createElement("span");
+        e.classList.add("celebrate-item");
+        const item = emojis[Math.floor(Math.random() * emojis.length)];
+        e.textContent = item.icon;
+        e.style.left = 20 + Math.random() * 60 + "%";
+        celebrateArea.appendChild(e);
+        setTimeout(() => e.remove(), 900);
       }
+      messageEl.innerHTML = `<span class="message-strong">完成目标啦 🎉</span>`;
+    } else {
+      const emojiSpan = document.createElement("span");
+      emojiSpan.classList.add("celebrate-item");
+      const item = emojis[Math.floor(Math.random() * emojis.length)];
+      emojiSpan.textContent = item.icon;
+      celebrateArea.appendChild(emojiSpan);
+      setTimeout(() => emojiSpan.remove(), 900);
 
-      const value = parseInt(totalInput.value, 10);
-      if (!value || value <= 0) { alert("请输入一个大于 0 的目标字数。"); return; }
-      const label = labelInput.value || "";
-      setWriteTodayTask(value, label);
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      messageEl.textContent = `${item.name}：${msg}`;
+    }
+  }
 
+  // ===== Core actions =====
+  function addTodayTask(total, label) {
+    const modeState = getModeState(currentMode);
+    ensureTodayTasks(modeState);
+
+    const today = todayString();
+    const cleanLabel = (label || "").trim();
+    const id = `t-${today}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const task = { id, date: today, total: Number(total || 0), finished: 0, label: cleanLabel };
+
+    modeState.todayTasks.push(task);
+    modeState.activeTaskId = id;
+
+    // 历史追加（同一天多条）
+    modeState.history.push({ ...task, id: `h-${id}` });
+    if (modeState.history.length > 4000) modeState.history = modeState.history.slice(-4000);
+
+    saveState();
+    renderTaskSelect();
+    updateHistoryView();
+
+    return task;
+  }
+
+  function updateActiveFinished(newFinished) {
+    const modeState = getModeState(currentMode);
+    ensureTodayTasks(modeState);
+
+    const active = getActiveTask();
+    if (!active) return;
+
+    active.finished = Number(newFinished || 0);
+
+    const hid = `h-${active.id}`;
+    const idx = modeState.history.findIndex(h => h.id === hid);
+    if (idx >= 0) {
+      modeState.history[idx].finished = active.finished;
+      modeState.history[idx].total = active.total;
+      modeState.history[idx].label = active.label || "";
+    }
+
+    saveState();
+    renderTaskSelect();
+    updateHistoryView();
+  }
+
+  // ===== History edit =====
+  function resetEditor() {
+    editingRecordId = null;
+    editDate.value = "";
+    editBook.value = "";
+    editPages.value = "";
+    editTotal.value = "";
+    editStatus.textContent = "";
+  }
+  function setEditorFromRecord(rec) {
+    editingRecordId = rec.id;
+    editDate.value = rec.date || "";
+    editBook.value = rec.label || "";
+    editPages.value = Number(rec.finished || 0);
+    editTotal.value = Number(rec.total || 0);
+    editStatus.textContent = `正在编辑：${rec.date || ""} · ${rec.label || "（未命名）"}`;
+  }
+  function upsertReadHistoryRecord() {
+    const date = (editDate.value || "").trim();
+    if (!date) { alert("请选择日期"); return; }
+
+    const label = (editBook.value || "").trim();
+    const finished = Number(editPages.value || 0);
+    const total = Number(editTotal.value || 0);
+
+    const readState = getModeState("read");
+
+    if (editingRecordId) {
+      const idx = readState.history.findIndex(h => h.id === editingRecordId);
+      if (idx >= 0) {
+        readState.history[idx].date = date;
+        readState.history[idx].label = label;
+        readState.history[idx].finished = finished;
+        readState.history[idx].total = total;
+      } else {
+        readState.history.push({
+          id: `h-read-${date}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          date, label, finished, total
+        });
+      }
+      editStatus.textContent = "已更新 ✅";
+    } else {
+      readState.history.push({
+        id: `h-read-${date}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        date, label, finished, total
+      });
+      editStatus.textContent = "已新增 ✅";
+    }
+
+    if (label) saveBookTitle(label);
+
+    saveState();
+    renderBookSuggestions();
+    updateReadingStats();
+    updateHistoryView();
+  }
+  function deleteReadHistoryRecordById(id) {
+    const readState = getModeState("read");
+    const idx = readState.history.findIndex(h => h.id === id);
+    if (idx >= 0) readState.history.splice(idx, 1);
+
+    if (String(id).startsWith("h-t-")) {
+      const tid = id.slice(2);
+      const tIdx = readState.todayTasks.findIndex(t => t.id === tid);
+      if (tIdx >= 0) readState.todayTasks.splice(tIdx, 1);
+      if (readState.activeTaskId === tid) readState.activeTaskId = readState.todayTasks[0]?.id || null;
+    }
+
+    saveState();
+    updateReadingStats();
+    updateHistoryView();
+    renderTaskSelect();
+    if (editingRecordId === id) resetEditor();
+  }
+
+  // ===== Recent 7 days =====
+  function updateHistoryView() {
+    const modeState = getModeState(currentMode);
+    const history = modeState.history || [];
+
+    if (!history.length) {
+      historyList.textContent = "暂无数据～";
+      weekSummary.textContent = "";
+      updateReadingStats();
+      return;
+    }
+
+    const today = todayString();
+    const thisWeekStart = getWeekStartTime(parseDateStr(today));
+
+    let weekFinished = 0, weekTotal = 0;
+
+    history.forEach(item => {
+      if (!item.date) return;
+      const ws = getWeekStartTime(parseDateStr(item.date));
+      if (ws === thisWeekStart) {
+        weekFinished += Number(item.finished || 0);
+        weekTotal += Number(item.total || 0);
+      }
+    });
+
+    const conf = MODE_CONFIG[currentMode];
+    weekSummary.textContent = weekTotal > 0
+      ? `本周合计：${weekFinished}/${weekTotal}${conf.unit}`
+      : "本周暂未记录任务";
+
+    const last7 = history.slice(-7).reverse();
+    historyList.innerHTML = "";
+
+    last7.forEach(item => {
+      const div = document.createElement("div");
+      div.classList.add("history-item");
+      const percent = item.total > 0 ? Math.round((item.finished / item.total) * 100) : 0;
+      const labelText = item.label ? ` · ${item.label}` : "";
+      div.innerHTML = `
+        <span class="history-date">${escapeHtml(item.date || "")}${escapeHtml(labelText)}</span>
+        <span class="history-detail">${Number(item.finished||0)}/${Number(item.total||0)}${conf.unit}（${percent <= 100 ? percent+"%" : "100%+"}）</span>
+      `;
+      historyList.appendChild(div);
+    });
+
+    updateReadingStats();
+  }
+
+  // ===== Reading stats + RAW + integrate solve =====
+  function updateReadingStats() {
+    const readState = getModeState("read");
+    const history = readState.history || [];
+
+    // --- solve summary always update ---
+    updateSolveView();
+
+    // If no reading
+    if (!history.length) {
+      readingTableContainer.textContent = "暂无阅读记录～";
+      bookTableContainer.textContent = "暂无书籍记录～";
+      rawTableContainer.textContent = "暂无原始记录～";
+      readingChart.innerHTML = "";
+      const solveTotal = solveTotals();
+      const { e } = solveTodayCounts();
+      const solveToday = (e.vocab||0)+(e.def||0)+(e.syntax||0);
+      totalAllEl.textContent = `累计阅读：0 页 ｜ 累计天数：0 天 ｜ 平均每天：0.0 页/天 ｜ 连续阅读：0 天 ｜ 连续页数：0 页 ｜ 今日解题：${solveToday} ｜ 累计解题：${solveTotal}`;
+      renderRawTable("");
+      return;
+    }
+
+    // daily reading map
+    const dailyMap = new Map(); // date -> { finished, labels:Set }
+    history.forEach(item => {
+      if (!item.date) return;
+      const key = item.date;
+      if (!dailyMap.has(key)) dailyMap.set(key, { finished: 0, labels: new Set() });
+      const entry = dailyMap.get(key);
+      entry.finished += Number(item.finished || 0);
+      if (item.label && item.label.trim()) entry.labels.add(item.label.trim());
+    });
+    const dates = Array.from(dailyMap.keys()).sort();
+
+    const totalAllPages = history.reduce((s, it) => s + Number(it.finished || 0), 0);
+    const totalDays = dates.filter(d => (dailyMap.get(d)?.finished || 0) > 0).length;
+    const avgPerDay = totalDays > 0 ? (totalAllPages / totalDays) : 0;
+
+    // streak from last recorded day
+    let streakDays = 0;
+    let streakPages = 0;
+    if (dates.length > 0) {
+      let cursor = new Date(parseDateStr(dates[dates.length - 1]));
+      while (true) {
+        const key = cursor.toISOString().slice(0,10);
+        const v = (dailyMap.get(key)?.finished) || 0;
+        if (v <= 0) break;
+        streakDays += 1;
+        streakPages += v;
+        cursor.setDate(cursor.getDate() - 1);
+        if (streakDays > 4000) break;
+      }
+    }
+
+    // integrate solve totals into main panel
+    const solveTotal = solveTotals();
+    const { e } = solveTodayCounts();
+    const solveToday = (e.vocab||0)+(e.def||0)+(e.syntax||0);
+
+    totalAllEl.textContent =
+      `累计阅读：${totalAllPages} 页 ｜ 累计天数：${totalDays} 天 ｜ 平均每天：${avgPerDay.toFixed(1)} 页/天 ｜ 连续阅读：${streakDays} 天 ｜ 连续页数：${streakPages} 页 ｜ 今日解题：${solveToday} ｜ 累计解题：${solveTotal}`;
+
+    // daily table
+    let html = '<table class="reading-table"><thead><tr><th>日期</th><th>完成页数</th><th>书名</th></tr></thead><tbody>';
+    dates.forEach(d => {
+      const entry = dailyMap.get(d);
+      const labels = Array.from(entry.labels).join(" / ") || "-";
+      html += `<tr><td>${escapeHtml(d)}</td><td>${entry.finished}</td><td>${escapeHtml(labels)}</td></tr>`;
+    });
+    html += "</tbody></table>";
+    readingTableContainer.innerHTML = html;
+
+    // book summary
+    const bookMap = new Map();
+    history.forEach(item => {
+      const book = (item.label || "").trim() || "（未命名）";
+      if (!bookMap.has(book)) bookMap.set(book, { pages: 0, days: new Set(), lastDate: item.date || "" });
+      const e = bookMap.get(book);
+      e.pages += Number(item.finished || 0);
+      if (item.date) e.days.add(item.date);
+      if (item.date && item.date > e.lastDate) e.lastDate = item.date;
+    });
+    const books = Array.from(bookMap.entries()).sort((a,b) => b[1].pages - a[1].pages);
+    let bhtml = '<table class="reading-table"><thead><tr><th>书名</th><th>累计页数</th><th>出现天数</th><th>最近阅读</th></tr></thead><tbody>';
+    books.forEach(([name, e]) => {
+      bhtml += `<tr><td>${escapeHtml(name)}</td><td>${e.pages}</td><td>${e.days.size}</td><td>${escapeHtml(e.lastDate || "-")}</td></tr>`;
+    });
+    bhtml += "</tbody></table>";
+    bookTableContainer.innerHTML = bhtml;
+
+    // chart
+    const recentDates = dates.slice(-90);
+    const values = recentDates.map(d => dailyMap.get(d).finished);
+    const maxValue = Math.max(...values, 1);
+    const maxSqrt = Math.sqrt(maxValue);
+
+    readingChart.innerHTML = "";
+    recentDates.forEach((d, idx) => {
+      const v = dailyMap.get(d).finished;
+
+      const barWrapper = document.createElement("div");
+      barWrapper.classList.add("chart-bar-wrapper");
+
+      const bar = document.createElement("div");
+      bar.classList.add("chart-bar");
+
+      const minH = 35;
+      const h = v <= 0 ? 6 : Math.max(minH, (Math.sqrt(v) / maxSqrt) * 100);
+      bar.style.height = `${h}%`;
+
+      if (streakDays > 0 && idx >= recentDates.length - streakDays) bar.classList.add("streak");
+
+      const label = document.createElement("div");
+      label.classList.add("chart-bar-label");
+      label.textContent = `${d.slice(5)}\n${v}`;
+
+      barWrapper.appendChild(bar);
+      barWrapper.appendChild(label);
+      readingChart.appendChild(barWrapper);
+    });
+
+    // raw search render
+    renderRawTable(rawSearch.value);
+  }
+
+  function renderRawTable(keyword) {
+    const readState = getModeState("read");
+    const history = readState.history || [];
+    const k = (keyword || "").trim().toLowerCase();
+
+    const rows = history
+      .filter(it => {
+        const label = String(it.label || "").toLowerCase();
+        const date = String(it.date || "").toLowerCase();
+        return !k || label.includes(k) || date.includes(k);
+      })
+      .slice(-900)
+      .reverse();
+
+    let r = '<table class="reading-table"><thead><tr><th>日期</th><th>书名(label)</th><th>完成</th><th>目标</th><th>操作</th></tr></thead><tbody>';
+    rows.forEach(it => {
+      r += `<tr>
+        <td>${escapeHtml(it.date || "")}</td>
+        <td>${escapeHtml(it.label || "（空）")}</td>
+        <td>${Number(it.finished||0)}</td>
+        <td>${Number(it.total||0)}</td>
+        <td class="actions">
+          <a data-act="edit" data-id="${escapeHtml(it.id)}">编辑</a>
+          <a data-act="del" data-id="${escapeHtml(it.id)}">删除</a>
+        </td>
+      </tr>`;
+    });
+    r += "</tbody></table>";
+    rawTableContainer.innerHTML = r;
+
+    rawTableContainer.onclick = (e) => {
+      const a = e.target.closest("a[data-act]");
+      if (!a) return;
+      const act = a.getAttribute("data-act");
+      const id = a.getAttribute("data-id");
+      const rec = readState.history.find(h => h.id === id);
+      if (!rec) return;
+
+      if (act === "edit") {
+        setEditorFromRecord(rec);
+        editDate.scrollIntoView({behavior:"smooth", block:"center"});
+      } else if (act === "del") {
+        const ok = confirm("确定删除这条记录吗？");
+        if (!ok) return;
+        deleteReadHistoryRecordById(id);
+      }
+    };
+  }
+
+  // ===== Init =====
+  function initFromState() {
+    applyModeUI();
+
+    const modeState = getModeState(currentMode);
+    ensureTodayTasks(modeState);
+
+    const active = getActiveTask();
+
+    if (modeState.todayTasks.length) {
       setupSection.classList.add("hidden");
       mainSection.classList.remove("hidden");
-      singleProgressArea.classList.remove("hidden");
-      multiProgressArea.classList.add("hidden");
-      const writeState = getModeState("write");
-      updateWriteProgressDisplay(writeState.today.finished, writeState.today.total, writeState.today.label || "");
-    });
 
-    doneBtn.addEventListener("click", () => {
-      if (currentMode !== "write") return;
-      const writeState = getModeState("write");
-      const today = todayString();
-      if (!writeState.today || writeState.today.date !== today) { alert("请先设定今天的写作目标~"); return; }
+      renderTaskSelect();
 
-      let finished = writeState.today.finished || 0;
-      const total = writeState.today.total || 0;
-      const label = writeState.today.label || "";
-      const wasCompleted = total > 0 && finished >= total;
-
-      finished += WRITE_STEP;
-      updateWriteTodayFinished(finished);
-      updateWriteProgressDisplay(finished, total, label);
-
-      const nowCompleted = total > 0 && finished >= total;
-      if (!wasCompleted && nowCompleted) showCelebrate(true);
-      else showCelebrate(false);
-    });
-
-    // 撤销：阅读撤销最近一次点的书；写作撤销100
-    undoBtn.addEventListener("click", () => {
-      const today = todayString();
-
-      if (currentMode === "write") {
-        const writeState = getModeState("write");
-        if (!writeState.today || writeState.today.date !== today) { alert("今天还没有可以撤销的记录～"); return; }
-        let finished = writeState.today.finished || 0;
-        if (finished <= 0) { alert("当前完成数已经是 0 了～"); return; }
-        finished = Math.max(0, finished - WRITE_STEP);
-        updateWriteTodayFinished(finished);
-        updateWriteProgressDisplay(finished, writeState.today.total, writeState.today.label || "");
-        messageEl.textContent = "已撤销一步 ✅";
-        return;
+      if (active) {
+        totalInput.value = active.total;
+        if (currentMode === "read") bookInput.value = active.label || "";
+        else labelInput.value = active.label || "";
+        updateProgressDisplay(active.finished, active.total, active.label);
       }
+    } else {
+      setupSection.classList.remove("hidden");
+      mainSection.classList.add("hidden");
+      totalInput.value = "";
+      bookInput.value = "";
+      labelInput.value = "";
+      progressBarInner.style.width = "0%";
+      messageEl.textContent = "";
+      currentLabelEl.textContent = "";
+    }
 
-      const readState = getModeState("read");
-      if (!readState.today || readState.today.date !== today || !(readState.today.tasks || []).length) {
-        alert("今天还没有可以撤销的阅读记录～");
-        return;
-      }
-      const lastId = readState.today.lastTouchedTaskId;
-      const task = lastId ? readState.today.tasks.find(t => t.id === lastId) : readState.today.tasks[0];
-      if (!task) { alert("没有找到可撤销的书～"); return; }
-      if ((task.finished || 0) <= 0) { alert("这本书当前完成数已经是 0 了～"); return; }
+    editDate.value = todayString();
 
-      task.finished = Math.max(0, Number(task.finished || 0) - 1);
-      upsertReadHistoryForTodayTask(task);
-      saveState();
-      refreshReadUI();
-      messageEl.textContent = `已撤销：${task.title} -1 页 ✅`;
-    });
+    updateSolveView();
+    updateHistoryView();
+  }
 
-    // 重置今天
-    resetTodayBtn.addEventListener("click", () => {
-      if (!confirm("确定要重置今天的记录吗？（今天完成数归零，目标保留）")) return;
-      const today = todayString();
+  // ===== Events =====
+  modeButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.getAttribute("data-mode");
+      if (mode === currentMode) return;
+      currentMode = mode;
 
-      if (currentMode === "write") {
-        const writeState = getModeState("write");
-        if (!writeState.today || writeState.today.date !== today) { alert("今天还没有设置任务，无需重置～"); return; }
-        updateWriteTodayFinished(0);
-        updateWriteProgressDisplay(0, writeState.today.total, writeState.today.label || "");
-        messageEl.textContent = "已重置今天的写作记录 ✅";
-        return;
-      }
+      modeButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
 
-      const readState = getModeState("read");
-      if (!readState.today || readState.today.date !== today || !(readState.today.tasks || []).length) {
-        alert("今天还没有设置书单，无需重置～");
-        return;
-      }
+      celebrateArea.innerHTML = "";
+      messageEl.textContent = "";
 
-      readState.today.tasks.forEach(t => {
-        t.finished = 0;
-        upsertReadHistoryForTodayTask(t);
-      });
-      readState.today.lastTouchedTaskId = null;
-      saveState();
-      refreshReadUI();
-      messageEl.textContent = "已重置今天的阅读书单 ✅";
-    });
-
-    clearAllBtn.addEventListener("click", () => {
-      if (!confirm("⚠️ 确认清空所有阅读 / 写作数据吗？此操作不可恢复。")) return;
-      state = { read: { today: null, history: [] }, write: { today: null, history: [] } };
-      saveState();
       initFromState();
-      alert("所有数据已清空 ✅");
     });
+  });
 
-    manualAddBtn.addEventListener("click", () => {
-      const dateStr = manualDateInput.value;
-      const pages = parseInt(manualPagesInput.value, 10);
-      const title = (manualTitleInput.value || "").trim();
-      const label = (manualLabelInput.value || "").trim();
+  startBtn.addEventListener("click", () => {
+    const value = parseInt(totalInput.value, 10);
+    if (!value || value <= 0) { alert("请输入一个大于 0 的目标数量。"); return; }
 
-      if (!dateStr) { alert("请先选择日期～"); return; }
-      if (!pages || pages <= 0) { alert("请填写一个大于 0 的完成页数～"); return; }
+    let label = "";
+    if (currentMode === "read") {
+      label = (bookInput.value || "").trim();
+      saveBookTitle(label);
+      renderBookSuggestions();
+    } else {
+      label = (labelInput.value || "").trim();
+    }
 
-      const readState = getModeState("read");
-      const safeTitle = title || "（补录）";
+    const task = addTodayTask(value, label);
+    setupSection.classList.add("hidden");
+    mainSection.classList.remove("hidden");
+    renderTaskSelect();
+    updateProgressDisplay(task.finished, task.total, task.label);
+    updateReadingStats();
+  });
 
-      const idx = readState.history.findIndex(h => h.date === dateStr && (h.title || "").trim() === safeTitle);
-      if (idx >= 0) {
-        readState.history[idx].finished += pages;
-        readState.history[idx].total += pages;
-        if (label) {
-          const labels = new Set([readState.history[idx].label, label].filter(Boolean)
-            .join(" / ").split(" / ").map(s => s.trim()).filter(Boolean));
-          readState.history[idx].label = Array.from(labels).join(" / ");
-        }
-      } else {
-        readState.history.push({ date: dateStr, finished: pages, total: pages, label, title: safeTitle });
-      }
-      readState.history.sort((a,b) => a.date.localeCompare(b.date));
-      saveState();
-      updateHistoryView();
-      alert("已手动添加阅读记录 ✅");
-    });
+  addTaskBtn.addEventListener("click", () => {
+    totalInput.value = "";
+    if (currentMode === "read") { bookInput.value = ""; renderBookSuggestions(); }
+    else { labelInput.value = ""; }
+    setupSection.classList.remove("hidden");
+    mainSection.classList.add("hidden");
+  });
 
-    // ========= START =========
-    initFromState();
-  </script>
+  doneBtn.addEventListener("click", () => {
+    const active = getActiveTask();
+    if (!active) { alert("请先添加一个任务~"); return; }
+
+    let finished = Number(active.finished || 0);
+    const total = Number(active.total || 0);
+    const wasCompleted = total > 0 && finished >= total;
+
+    finished += (currentMode === "read") ? 1 : WRITE_STEP;
+
+    updateActiveFinished(finished);
+    updateProgressDisplay(finished, total, active.label);
+
+    const nowCompleted = total > 0 && finished >= total;
+    if (!wasCompleted && nowCompleted) showCelebrate(true);
+    else showCelebrate(false);
+
+    updateReadingStats();
+  });
+
+  saveRecordBtn.addEventListener("click", () => {
+    upsertReadHistoryRecord();
+  });
+
+  clearEditorBtn.addEventListener("click", () => {
+    resetEditor();
+    editDate.value = todayString();
+  });
+
+  rawSearch.addEventListener("input", () => {
+    renderRawTable(rawSearch.value);
+  });
+
+  quickGetBtn.addEventListener("click", () => {
+    rawSearch.value = "get";
+    renderRawTable(rawSearch.value);
+  });
+  quickGtdBtn.addEventListener("click", () => {
+    rawSearch.value = "gtd";
+    renderRawTable(rawSearch.value);
+  });
+  quickOriginBtn.addEventListener("click", () => {
+    rawSearch.value = "原著阅读营";
+    renderRawTable(rawSearch.value);
+  });
+
+  // Solve category buttons
+  solveCatVocab.addEventListener("click", () => setSolveCategory("vocab"));
+  solveCatDef.addEventListener("click", () => setSolveCategory("def"));
+  solveCatSyntax.addEventListener("click", () => setSolveCategory("syntax"));
+
+  // Solve add one
+  solveBtn.addEventListener("click", () => {
+    const t = todayString();
+    const { all, entry } = solveEntryFor(t);
+    entry[solveCat] = (entry[solveCat] || 0) + 1;
+    all[t] = entry;
+    saveSolve(all);
+
+    updateSolveView();
+    updateReadingStats();     // 同步总面板数字
+    maybeSolveFireworks();    // >=5 小烟花
+  });
+
+  // ===== Start =====
+  initFromState();
+</script>
 </body>
 </html>
